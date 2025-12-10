@@ -64,17 +64,25 @@ function LoginScreen({ onLogin, error }) {
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
           textAlign: 'center',
-          marginBottom: '40px',
+          marginBottom: '12px',
         }}>
           TWEETMINER
         </h2>
-        
+        <p style={{
+          fontSize: '12px',
+          color: '#555',
+          textAlign: 'center',
+          marginBottom: '32px',
+        }}>
+          Private tool. Enter your access code.
+        </p>
+
         <form onSubmit={handleSubmit}>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter password"
+            placeholder="Access code"
             style={{
               width: '100%',
               background: '#111',
