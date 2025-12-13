@@ -43,6 +43,15 @@ const STYLE_OPTIONS = [
   { value: 'casual', label: 'Casual & conversational' },
 ];
 
+const PLATFORMS = [
+  { value: 'twitter', label: 'Twitter/X', icon: '𝕏' },
+  { value: 'reddit', label: 'Reddit', icon: 'R' },
+  { value: 'linkedin', label: 'LinkedIn', icon: 'in' },
+  { value: 'hackernews', label: 'Hacker News', icon: 'Y' },
+  { value: 'youtube', label: 'YouTube', icon: '▶' },
+  { value: 'other', label: 'Other', icon: '...' },
+];
+
 function ProfileSetup({ onSave, initialProfile }) {
   const [profile, setProfile] = useState(initialProfile || DEFAULT_PROFILE);
 
@@ -470,6 +479,7 @@ function LoginScreen({ onLogin, error }) {
 function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, profile, onEditProfile }) {
   const [tweetContent, setTweetContent] = useState(initialTweet || '');
   const [topReplies, setTopReplies] = useState(initialReplies || '');
+  const [platform, setPlatform] = useState('twitter');
   const [selectedMode, setSelectedMode] = useState(null);
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
@@ -487,7 +497,7 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, prof
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode, tweetContent, topReplies, profile }),
+        body: JSON.stringify({ mode, tweetContent, topReplies, profile, platform }),
       });
 
       const data = await response.json();
@@ -585,6 +595,44 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, prof
           </div>
         )}
 
+        {/* Platform Selector */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{
+            display: 'block',
+            fontSize: '14px',
+            fontWeight: 600,
+            color: '#111',
+            marginBottom: '8px',
+          }}>
+            Source
+          </label>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {PLATFORMS.map(p => (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => setPlatform(p.value)}
+                style={{
+                  background: platform === p.value ? '#111' : '#fafafa',
+                  border: platform === p.value ? 'none' : '1px solid #e0e0e0',
+                  borderRadius: '8px',
+                  color: platform === p.value ? '#fff' : '#666',
+                  padding: '8px 14px',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <span style={{ fontWeight: 700 }}>{p.icon}</span>
+                <span>{p.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Content Input */}
         <div style={{ marginBottom: '20px' }}>
           <label style={{
@@ -599,7 +647,7 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, prof
           <textarea
             value={tweetContent}
             onChange={(e) => setTweetContent(e.target.value)}
-            placeholder="Paste tweet, post, or any content here..."
+            placeholder={platform === 'reddit' ? 'Paste Reddit post here...' : platform === 'youtube' ? 'Paste video title/description here...' : platform === 'linkedin' ? 'Paste LinkedIn post here...' : platform === 'hackernews' ? 'Paste HN post here...' : 'Paste content here...'}
             style={{
               width: '100%',
               minHeight: '140px',

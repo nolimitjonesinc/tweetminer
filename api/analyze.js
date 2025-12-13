@@ -70,7 +70,20 @@ Be specific about numbers, platforms, and tactics. No generic advice. Everything
   };
 }
 
-const SUMMARIZE_PROMPT = `You are a reply analyst preparing context for a strategic opportunity finder. Extract EVERYTHING useful from these replies/comments.
+const PLATFORM_CONTEXT = {
+  twitter: 'Twitter/X - short-form, viral potential, real-time reactions',
+  reddit: 'Reddit - deep discussions, niche communities, brutally honest feedback',
+  linkedin: 'LinkedIn - professional network, B2B opportunities, career-focused',
+  hackernews: 'Hacker News - technical audience, startup founders, honest critiques',
+  youtube: 'YouTube - mass audience, content creators, engagement-driven',
+  other: 'general online discussion',
+};
+
+function getSummarizePrompt(platform) {
+  const context = PLATFORM_CONTEXT[platform] || PLATFORM_CONTEXT.other;
+  return `You are a reply analyst preparing context for a strategic opportunity finder. This content is from ${context}.
+
+Extract EVERYTHING useful from these replies/comments. Consider the platform context when interpreting tone and significance.
 
 Output a thorough summary:
 
@@ -124,7 +137,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { mode, tweetContent, topReplies, profile } = req.body;
+  const { mode, tweetContent, topReplies, profile, platform } = req.body;
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (!apiKey) {
@@ -150,7 +163,7 @@ export default async function handler(req, res) {
       replySummary = await callClaude(
         apiKey,
         'claude-3-5-haiku-20241022',
-        SUMMARIZE_PROMPT,
+        getSummarizePrompt(platform),
         `Here are the replies/comments to analyze:\n\n${topReplies}`,
         1200
       );
@@ -176,7 +189,8 @@ ${replySummary}` : '(No replies/comments provided)'}`;
       meta: {
         repliesProcessed: topReplies ? topReplies.split('\n\n').length : 0,
         usedHaikuSummary: !!replySummary,
-        profileUsed: !!profile?.name
+        profileUsed: !!profile?.name,
+        platform: platform || 'other'
       }
     });
   } catch (err) {
