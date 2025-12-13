@@ -1,11 +1,14 @@
 # TweetMiner Roadmap
 
-## Current State
+## Current State (v1.2)
 - Multi-platform Chrome extension (Twitter, Reddit, LinkedIn, HN, YouTube)
 - Universal bookmarklet (no extension needed)
 - Haiku 3.5 → Sonnet 4.5 pipeline
 - Customizable user profiles
 - Platform-aware analysis
+- **NEW:** Analysis history (auto-save, reload, delete)
+- **NEW:** Export to markdown
+- **NEW:** Keyboard shortcuts (Cmd/Ctrl+Enter)
 - Clean minimal UI
 - Live at tweetminer.nolimitjones.com
 
@@ -13,19 +16,19 @@
 
 ## Completed
 
-### Goal 1: User Profile System ✅
+### Goal 1: User Profile System
 - [x] Users can define who they are and what they're looking for
 - [x] System prompts dynamically use their profile
 - [x] Profile persists across sessions (localStorage)
 - [x] Easy to update via settings modal
 - [x] First-time setup flow
 
-### Goal 2: Universal Content Support ✅
+### Goal 2: Universal Content Support
 - [x] Platform selector (Twitter, Reddit, LinkedIn, HN, YouTube, Other)
 - [x] Generic field labels
 - [x] Platform-aware summarization prompts
 
-### Goal 3-6: Multi-Platform Extension ✅
+### Goal 3-6: Multi-Platform Extension
 - [x] Twitter/X support
 - [x] Reddit support (new + old Reddit)
 - [x] LinkedIn support
@@ -34,25 +37,31 @@
 - [x] Right-click context menu on all platforms
 - [x] Popup with content preview
 
-### Goal 7: Universal Bookmarklet ✅
+### Goal 7: Universal Bookmarklet
 - [x] One-click bookmarklet at /bookmarklet.html
 - [x] Auto-detects platform
 - [x] Falls back to selected text on unsupported sites
 - [x] Drag-to-install UI
 
+### Goal 8: Analysis History
+- [x] Auto-save analyses to localStorage (max 50)
+- [x] History modal with delete, clear all
+- [x] Click to reload past content and results
+- [x] Shows mode, platform, time, preview
+
+### Goal 9: Export Options
+- [x] Copy result (plain text)
+- [x] Export as markdown with metadata
+- [x] Includes date, platform, original content, analysis
+
+### Goal 10: UX Polish
+- [x] Keyboard shortcuts (Cmd/Ctrl+Enter to analyze, Escape to close)
+- [x] Shortcut hint in footer
+- [x] Link to bookmarklet in footer
+
 ---
 
 ## Future Considerations
-
-### Saved Analyses History
-- Save past analyses locally
-- Search/filter previous analyses
-- Re-analyze with different modes
-
-### Export Options
-- Copy as markdown
-- Export to PDF
-- Share link generation
 
 ### Team Features
 - Share analyses with others
@@ -64,7 +73,12 @@
 
 ### Mobile Support
 - Share sheet integration on iOS/Android
-- Responsive web app improvements
+- PWA support
+
+### Advanced Features
+- Custom analysis modes
+- Batch analysis
+- RSS/webhook integrations
 
 ---
 
@@ -91,3 +105,8 @@ bookmarklet/bookmarklet.js  # Source (minified in HTML)
 2. Sonnet 4.5 performs analysis (smart, personalized)
 3. Profile data injected into system prompts
 4. Platform context shapes summarization approach
+
+### Data Storage
+- `tweetminer_auth` - Auth token
+- `tweetminer_profile` - User profile JSON
+- `tweetminer_history` - Analysis history (max 50 items)
