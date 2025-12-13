@@ -52,6 +52,221 @@ const PLATFORMS = [
   { value: 'other', label: 'Other', icon: '...' },
 ];
 
+const MAX_HISTORY_ITEMS = 50;
+
+function saveToHistory(entry) {
+  const history = JSON.parse(localStorage.getItem('tweetminer_history') || '[]');
+  history.unshift({ ...entry, id: Date.now(), timestamp: new Date().toISOString() });
+  if (history.length > MAX_HISTORY_ITEMS) history.pop();
+  localStorage.setItem('tweetminer_history', JSON.stringify(history));
+  return history;
+}
+
+function getHistory() {
+  return JSON.parse(localStorage.getItem('tweetminer_history') || '[]');
+}
+
+function deleteFromHistory(id) {
+  const history = getHistory().filter(item => item.id !== id);
+  localStorage.setItem('tweetminer_history', JSON.stringify(history));
+  return history;
+}
+
+function clearHistory() {
+  localStorage.setItem('tweetminer_history', '[]');
+  return [];
+}
+
+function HistoryModal({ onClose, onSelect }) {
+  const [history, setHistory] = useState(getHistory());
+
+  const formatDate = (isoString) => {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  };
+
+  const handleDelete = (e, id) => {
+    e.stopPropagation();
+    setHistory(deleteFromHistory(id));
+  };
+
+  const handleClearAll = () => {
+    if (confirm('Clear all history?')) {
+      setHistory(clearHistory());
+    }
+  };
+
+  return (
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      background: 'rgba(0,0,0,0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px',
+      zIndex: 1000,
+    }}>
+      <div style={{
+        background: '#fff',
+        borderRadius: '16px',
+        width: '100%',
+        maxWidth: '600px',
+        maxHeight: '80vh',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '20px 24px',
+          borderBottom: '1px solid #f0f0f0',
+        }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#111', margin: 0 }}>
+            History
+          </h2>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            {history.length > 0 && (
+              <button
+                onClick={handleClearAll}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#ef4444',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                }}
+              >
+                Clear all
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              style={{
+                background: 'none',
+                border: 'none',
+                fontSize: '24px',
+                color: '#999',
+                cursor: 'pointer',
+                padding: '4px',
+                lineHeight: 1,
+              }}
+            >
+              &times;
+            </button>
+          </div>
+        </div>
+
+        <div style={{ overflow: 'auto', flex: 1 }}>
+          {history.length === 0 ? (
+            <div style={{
+              padding: '48px 24px',
+              textAlign: 'center',
+              color: '#999',
+              fontSize: '14px',
+            }}>
+              No saved analyses yet
+            </div>
+          ) : (
+            history.map(item => (
+              <div
+                key={item.id}
+                onClick={() => onSelect(item)}
+                style={{
+                  padding: '16px 24px',
+                  borderBottom: '1px solid #f5f5f5',
+                  cursor: 'pointer',
+                  transition: 'background 0.1s',
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#fafafa'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  gap: '12px',
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginBottom: '6px',
+                    }}>
+                      <span style={{
+                        background: MODES[item.mode]?.color || '#666',
+                        color: '#fff',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                      }}>
+                        {item.mode}
+                      </span>
+                      <span style={{
+                        background: '#f1f5f9',
+                        color: '#64748b',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                      }}>
+                        {PLATFORMS.find(p => p.value === item.platform)?.label || 'Other'}
+                      </span>
+                      <span style={{ color: '#999', fontSize: '12px' }}>
+                        {formatDate(item.timestamp)}
+                      </span>
+                    </div>
+                    <div style={{
+                      fontSize: '14px',
+                      color: '#333',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {item.content.slice(0, 100)}{item.content.length > 100 ? '...' : ''}
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => handleDelete(e, item.id)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#ccc',
+                      fontSize: '18px',
+                      cursor: 'pointer',
+                      padding: '4px',
+                      lineHeight: 1,
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.color = '#ef4444'}
+                    onMouseOut={(e) => e.currentTarget.style.color = '#ccc'}
+                  >
+                    &times;
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ProfileSetup({ onSave, initialProfile }) {
   const [profile, setProfile] = useState(initialProfile || DEFAULT_PROFILE);
 
@@ -485,6 +700,7 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, init
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
   const analyze = async (mode) => {
     if (!tweetContent.trim()) return;
@@ -501,12 +717,33 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, init
       });
 
       const data = await response.json();
-      setResult(data.error ? `Error: ${data.error}` : data.result);
+      const analysisResult = data.error ? `Error: ${data.error}` : data.result;
+      setResult(analysisResult);
+
+      // Save to history on successful analysis
+      if (!data.error) {
+        saveToHistory({
+          mode,
+          platform,
+          content: tweetContent,
+          replies: topReplies,
+          result: analysisResult,
+        });
+      }
     } catch (err) {
       setResult(`Error: ${err.message}`);
     }
 
     setLoading(false);
+  };
+
+  const loadFromHistory = (item) => {
+    setTweetContent(item.content);
+    setTopReplies(item.replies || '');
+    setPlatform(item.platform);
+    setSelectedMode(item.mode);
+    setResult(item.result);
+    setShowHistoryModal(false);
   };
 
   const copyResult = () => {
@@ -536,6 +773,13 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, init
         />
       )}
 
+      {showHistoryModal && (
+        <HistoryModal
+          onClose={() => setShowHistoryModal(false)}
+          onSelect={loadFromHistory}
+        />
+      )}
+
       {/* Header */}
       <header style={{
         borderBottom: '1px solid #f0f0f0',
@@ -548,6 +792,21 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, init
           TweetMiner
         </h1>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button
+            onClick={() => setShowHistoryModal(true)}
+            style={{
+              background: '#fafafa',
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              color: '#666',
+              fontSize: '13px',
+              cursor: 'pointer',
+              padding: '8px 12px',
+              fontFamily: 'inherit',
+            }}
+          >
+            History
+          </button>
           <button
             onClick={() => setShowProfileModal(true)}
             style={{
