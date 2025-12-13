@@ -8,7 +8,9 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(convert:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(curl:*)"
     ]
   }
 }

@@ -1,5 +1,7 @@
 # TweetMiner Chrome Extension
 
+**Live URL:** https://tweetminer.vercel.app
+
 ## Installation
 
 1. Open Chrome and go to `chrome://extensions/`

@@ -1,4 +1,4 @@
-const TWEETMINER_URL = 'https://www.nolimitjones.com';
+const TWEETMINER_URL = 'https://tweetminer.vercel.app';
 
 let tweetData = null;
 
