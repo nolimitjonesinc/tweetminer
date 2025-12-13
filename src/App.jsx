@@ -752,6 +752,44 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, init
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const exportAsMarkdown = () => {
+    const platformLabel = PLATFORMS.find(p => p.value === platform)?.label || 'Other';
+    const modeLabel = MODES[selectedMode]?.label || selectedMode;
+    const date = new Date().toLocaleDateString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    const markdown = `# ${modeLabel} Analysis
+
+**Date:** ${date}
+**Platform:** ${platformLabel}
+**Analyzed by:** TweetMiner
+
+---
+
+## Original Content
+
+${tweetContent}
+
+${topReplies ? `## Comments/Replies
+
+${topReplies}
+
+` : ''}---
+
+## Analysis
+
+${result}
+
+---
+*Generated with TweetMiner*
+`;
+
+    navigator.clipboard.writeText(markdown);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const clearAll = () => {
     setTweetContent('');
     setTopReplies('');
@@ -1057,7 +1095,22 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, init
                 <button
                   onClick={copyResult}
                   style={{
-                    background: copied ? '#10b981' : '#111',
+                    background: copied ? '#10b981' : '#fff',
+                    border: copied ? 'none' : '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    color: copied ? '#fff' : '#666',
+                    padding: '8px 12px',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {copied ? 'Copied!' : 'Copy'}
+                </button>
+                <button
+                  onClick={exportAsMarkdown}
+                  style={{
+                    background: '#111',
                     border: 'none',
                     borderRadius: '8px',
                     color: '#fff',
@@ -1067,7 +1120,7 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, init
                     fontFamily: 'inherit',
                   }}
                 >
-                  {copied ? 'Copied!' : 'Copy'}
+                  Export MD
                 </button>
               </div>
             </div>
