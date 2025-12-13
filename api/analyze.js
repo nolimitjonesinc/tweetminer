@@ -114,7 +114,7 @@ ${replySummary}` : '(No replies provided)'}`;
 
     const result = await callClaude(
       apiKey,
-      'claude-sonnet-4-20250514',
+      'claude-sonnet-4-5-20250929',
       PROMPTS[mode],
       analysisInput,
       2000
