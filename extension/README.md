@@ -1,6 +1,6 @@
 # TweetMiner Chrome Extension
 
-**Live URL:** https://tweetminer.vercel.app
+**Live URL:** https://tweetminer.nolimitjones.com
 
 ## Installation
 

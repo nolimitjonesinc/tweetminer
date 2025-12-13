@@ -1,6 +1,6 @@
 // Background service worker
 
-const TWEETMINER_URL = 'https://tweetminer.vercel.app';
+const TWEETMINER_URL = 'https://tweetminer.nolimitjones.com';
 
 let storedTweetData = null;
 
