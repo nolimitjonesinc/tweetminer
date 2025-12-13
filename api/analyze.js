@@ -35,16 +35,29 @@ Analyze this tweet/thread for monetization potential:
 Be specific about numbers, platforms, and tactics. No generic "build an audience" advice.`
 };
 
-const SUMMARIZE_PROMPT = `You are a reply analyst. Extract the valuable signal from these Twitter/X replies.
+const SUMMARIZE_PROMPT = `You are a reply analyst preparing context for a strategic opportunity finder. Extract EVERYTHING useful from these Twitter/X replies.
 
-Output a concise summary with:
-1. **Key Themes** - What topics keep coming up? (2-4 themes)
-2. **Strong Opinions** - What are people passionate about? Any controversy?
-3. **Questions Asked** - What are people confused about or wanting to know?
-4. **Interesting Ideas** - Any replies that contain novel insights or suggestions?
-5. **Notable Quotes** - 2-3 direct quotes that capture the conversation's essence
+Output a thorough summary:
 
-Be concise. Focus on what's useful for identifying opportunities.`;
+1. **Overall Sentiment** - Is the crowd excited, skeptical, frustrated, curious? What's the vibe?
+
+2. **Key Themes** (2-5 themes) - What topics keep coming up? Be specific.
+
+3. **Pain Points & Frustrations** - What problems are people expressing? What's broken or missing for them?
+
+4. **Questions & Confusion** - What do people want to know? What don't they understand?
+
+5. **Ideas & Suggestions** - Any novel insights, feature requests, or "someone should build X" moments?
+
+6. **Skepticism & Counterarguments** - What pushback exists? What are the doubters saying?
+
+7. **Expert Signals** - Any replies from people with clear expertise or credibility? What do they add?
+
+8. **Use Cases Mentioned** - Specific examples of how people would use this or are using similar things?
+
+9. **Notable Quotes** (3-5 direct quotes) - Capture the most insightful, passionate, or representative voices verbatim.
+
+Be thorough. The next step is strategic analysis - give it rich material to work with.`;
 
 async function callClaude(apiKey, model, system, userContent, maxTokens = 1500) {
   const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -101,7 +114,7 @@ export default async function handler(req, res) {
         'claude-3-5-haiku-20241022',
         SUMMARIZE_PROMPT,
         `Here are the replies to analyze:\n\n${topReplies}`,
-        800
+        1200
       );
     }
 
