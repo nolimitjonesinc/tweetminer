@@ -476,10 +476,10 @@ function LoginScreen({ onLogin, error }) {
   );
 }
 
-function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, profile, onEditProfile }) {
+function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, initialPlatform, profile, onEditProfile }) {
   const [tweetContent, setTweetContent] = useState(initialTweet || '');
   const [topReplies, setTopReplies] = useState(initialReplies || '');
-  const [platform, setPlatform] = useState('twitter');
+  const [platform, setPlatform] = useState(initialPlatform || 'twitter');
   const [selectedMode, setSelectedMode] = useState(null);
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
@@ -591,7 +591,7 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, prof
             fontSize: '14px',
             color: '#166534',
           }}>
-            Imported from Twitter
+            Imported from {PLATFORMS.find(p => p.value === platform)?.label || 'extension'}
           </div>
         )}
 
@@ -843,7 +843,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [urlParams, setUrlParams] = useState({ tweet: '', replies: '', source: '' });
+  const [urlParams, setUrlParams] = useState({ tweet: '', replies: '', source: '', platform: '' });
   const [profile, setProfile] = useState(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
 
@@ -854,6 +854,7 @@ function App() {
       tweet: params.get('tweet') || '',
       replies: params.get('replies') || '',
       source: params.get('source') || '',
+      platform: params.get('platform') || '',
     });
 
     // Clear URL params after reading (cleaner URL)
@@ -963,6 +964,7 @@ function App() {
       initialTweet={urlParams.tweet}
       initialReplies={urlParams.replies}
       sourceUrl={urlParams.source}
+      initialPlatform={urlParams.platform}
       profile={profile}
       onEditProfile={handleSaveProfile}
     />

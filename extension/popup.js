@@ -1,6 +1,15 @@
 const TWEETMINER_URL = 'https://tweetminer.nolimitjones.com';
 
-let tweetData = null;
+const PLATFORM_NAMES = {
+  twitter: 'Twitter/X',
+  reddit: 'Reddit',
+  linkedin: 'LinkedIn',
+  hackernews: 'Hacker News',
+  youtube: 'YouTube',
+  other: 'this page'
+};
+
+let contentData = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   const statusEl = document.getElementById('status');
@@ -10,33 +19,40 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Get the active tab
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-  // Check if we're on Twitter/X
-  const isTwitter = tab.url && (tab.url.includes('twitter.com') || tab.url.includes('x.com'));
+  // Check if we're on a supported platform
+  const url = tab.url || '';
+  const isSupported = url.includes('twitter.com') ||
+                      url.includes('x.com') ||
+                      url.includes('reddit.com') ||
+                      url.includes('linkedin.com') ||
+                      url.includes('ycombinator.com') ||
+                      url.includes('youtube.com');
 
-  if (!isTwitter) {
-    statusEl.textContent = 'Open a tweet on Twitter/X to analyze it';
+  if (!isSupported) {
+    statusEl.textContent = 'Open a post on Twitter, Reddit, LinkedIn, HN, or YouTube';
     statusEl.className = 'status not-found';
     analyzeBtn.disabled = true;
-    analyzeBtn.textContent = 'Not on Twitter';
+    analyzeBtn.textContent = 'Not on supported site';
     return;
   }
 
-  // Try to get tweet data
+  // Try to get content data
   try {
-    tweetData = await chrome.tabs.sendMessage(tab.id, { action: 'getTweetData' });
+    contentData = await chrome.tabs.sendMessage(tab.id, { action: 'getData' });
 
-    if (tweetData && tweetData.mainTweet) {
-      statusEl.textContent = 'Tweet found!';
+    if (contentData && contentData.mainContent) {
+      const platformName = PLATFORM_NAMES[contentData.platform] || 'this page';
+      statusEl.textContent = `Content found on ${platformName}!`;
       statusEl.className = 'status found';
 
       // Show preview
-      const preview = tweetData.mainTweet.slice(0, 150);
-      previewEl.textContent = preview + (tweetData.mainTweet.length > 150 ? '...' : '');
+      const preview = contentData.mainContent.slice(0, 150);
+      previewEl.textContent = preview + (contentData.mainContent.length > 150 ? '...' : '');
       previewEl.className = 'preview visible';
 
-      analyzeBtn.textContent = 'Analyze This Tweet';
+      analyzeBtn.textContent = 'Analyze This Content';
     } else {
-      statusEl.textContent = 'Click on a tweet first, or open a tweet page';
+      statusEl.textContent = 'Navigate to a post to analyze it';
       statusEl.className = 'status not-found';
       analyzeBtn.textContent = 'Open TweetMiner';
     }
@@ -48,12 +64,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 document.getElementById('analyzeBtn').addEventListener('click', () => {
-  if (tweetData && tweetData.mainTweet) {
+  if (contentData && contentData.mainContent) {
     const params = new URLSearchParams();
-    params.set('tweet', tweetData.mainTweet);
-    if (tweetData.replies) params.set('replies', tweetData.replies);
-    if (tweetData.author) params.set('author', tweetData.author);
-    if (tweetData.url) params.set('source', tweetData.url);
+    params.set('tweet', contentData.mainContent);
+    if (contentData.replies) params.set('replies', contentData.replies);
+    if (contentData.author) params.set('author', contentData.author);
+    if (contentData.url) params.set('source', contentData.url);
+    if (contentData.platform) params.set('platform', contentData.platform);
 
     chrome.tabs.create({ url: `${TWEETMINER_URL}?${params.toString()}` });
   } else {
