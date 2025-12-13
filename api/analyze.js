@@ -1,41 +1,76 @@
-const PROMPTS = {
-  exploit: `You are an opportunity analyst for DJ, an award-winning game designer who creates ADHD-friendly iPhone games and runs mockingbirdnews.org (satirical news).
+// Generate dynamic prompts based on user profile
+function generatePrompts(profile) {
+  const name = profile?.name || 'the user';
+  const role = profile?.role || 'someone looking for opportunities';
+  const focus = profile?.focus || 'various projects';
+  const goals = profile?.goals || 'opportunities and insights';
+  const skills = profile?.skills || 'various skills';
+  const constraints = profile?.constraints || 'typical constraints';
+  const style = profile?.style || 'direct';
 
-Analyze this tweet/thread and identify:
-1. **Immediate Opportunities** - What can DJ act on THIS WEEK?
-2. **Game Design Angles** - How does this connect to calm-yet-exciting ADHD-friendly mobile games? TRON aesthetics? Could this inspire a mechanic, theme, or feature?
-3. **Mockingbird News Angles** - Is there satirical potential here? A comedic take?
-4. **Market Gaps** - What are people clearly wanting that doesn't exist yet?
-5. **Quick Wins** - Smallest possible action that captures value from this insight
+  const styleInstructions = {
+    direct: 'Be direct and concise. No fluff. Bullet points are good.',
+    detailed: 'Be thorough and detailed. Explain your reasoning. Provide context.',
+    casual: 'Be conversational and casual. Like talking to a smart friend.',
+  };
 
-Be direct. No fluff. Prioritize actionable specifics over abstract advice.`,
+  const styleNote = styleInstructions[style] || styleInstructions.direct;
 
-  explain: `You are a technical translator for DJ, a non-coder/vibe-coder who needs to understand technical concepts without jargon.
+  return {
+    exploit: `You are an opportunity analyst for ${name}, who is a ${role}.
 
-Explain what's being discussed in this tweet/thread:
+They are currently focused on: ${focus}
+They are looking for: ${goals}
+Their strengths: ${skills}
+Their constraints: ${constraints}
+
+Analyze this content and identify:
+1. **Immediate Opportunities** - What can ${name} act on THIS WEEK given their skills and focus?
+2. **Relevant Angles** - How does this connect to what they're building? Could this inspire a feature, pivot, or new direction?
+3. **Market Gaps** - What are people clearly wanting that doesn't exist yet? What could ${name} realistically build?
+4. **Quick Wins** - Smallest possible action that captures value from this insight
+5. **Contrarian Take** - What is everyone missing? What's the non-obvious opportunity?
+
+${styleNote}
+Prioritize actionable specifics over abstract advice. Tailor everything to ${name}'s specific situation.`,
+
+    explain: `You are a translator helping ${name} understand complex topics. They are a ${role}.
+
+Their background: ${focus}
+Their constraints: ${constraints}
+
+Explain what's being discussed in this content:
 1. **The Core Idea** - One sentence a smart 12-year-old would get
 2. **How It Actually Works** - Use analogies to physical things (restaurants, cars, mail, etc.)
 3. **Why People Care** - What problem does this solve? What does it enable?
 4. **The Catch** - What are the limitations, costs, or gotchas nobody mentions?
-5. **DJ's Cheat Code** - How could someone use this WITHOUT deep technical knowledge?
+5. **${name}'s Cheat Code** - How could they use this given their skills (${skills}) without deep expertise?
 
-No code unless absolutely necessary. When you must show code, explain every line like you're narrating.`,
+${styleNote}
+No unnecessary jargon. Make it practical and applicable to their situation.`,
 
-  productize: `You are a product strategist for DJ, an award-winning game designer (ADHD-friendly iPhone games) who runs mockingbirdnews.org and wants to build things that generate revenue.
+    productize: `You are a product strategist for ${name}, who is a ${role}.
 
-Analyze this tweet/thread for monetization potential:
-1. **Product Ideas** - What could be built and sold? (Apps, tools, content, services)
+They are building: ${focus}
+Looking for: ${goals}
+Their skills: ${skills}
+Their constraints: ${constraints}
+
+Analyze this content for monetization potential:
+1. **Product Ideas** - What could ${name} specifically build and sell given their skills?
 2. **Audience** - Who would pay? How much? How do you reach them?
 3. **MVP Scope** - What's the smallest version that people would pay for?
-4. **Competitive Landscape** - Who else is doing this? What's the gap?
-5. **DJ's Edge** - How do his specific skills (game design, ADHD focus, satire, vibe-coding) create an unfair advantage?
-6. **Revenue Model** - One-time purchase, subscription, freemium, ads, or something else?
+4. **Competitive Landscape** - Who else is doing this? What's the gap ${name} could fill?
+5. **Unfair Advantage** - How do ${name}'s specific skills create an edge?
+6. **Revenue Model** - One-time, subscription, freemium, or something else?
 7. **First 48 Hours** - Exact steps to validate this idea before building
 
-Be specific about numbers, platforms, and tactics. No generic "build an audience" advice.`
-};
+${styleNote}
+Be specific about numbers, platforms, and tactics. No generic advice. Everything should be actionable for ${name}'s specific situation.`
+  };
+}
 
-const SUMMARIZE_PROMPT = `You are a reply analyst preparing context for a strategic opportunity finder. Extract EVERYTHING useful from these Twitter/X replies.
+const SUMMARIZE_PROMPT = `You are a reply analyst preparing context for a strategic opportunity finder. Extract EVERYTHING useful from these replies/comments.
 
 Output a thorough summary:
 
@@ -89,19 +124,22 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { mode, tweetContent, topReplies } = req.body;
+  const { mode, tweetContent, topReplies, profile } = req.body;
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (!apiKey) {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
+  // Generate prompts based on user profile
+  const PROMPTS = generatePrompts(profile);
+
   if (!mode || !PROMPTS[mode]) {
     return res.status(400).json({ error: 'Invalid mode' });
   }
 
   if (!tweetContent || !tweetContent.trim()) {
-    return res.status(400).json({ error: 'Tweet content required' });
+    return res.status(400).json({ error: 'Content required' });
   }
 
   try {
@@ -113,17 +151,17 @@ export default async function handler(req, res) {
         apiKey,
         'claude-3-5-haiku-20241022',
         SUMMARIZE_PROMPT,
-        `Here are the replies to analyze:\n\n${topReplies}`,
+        `Here are the replies/comments to analyze:\n\n${topReplies}`,
         1200
       );
     }
 
     // Stage 2: Main analysis with Sonnet (smart)
-    const analysisInput = `TWEET CONTENT:
+    const analysisInput = `CONTENT:
 ${tweetContent}
 
-${replySummary ? `REPLY ANALYSIS (summarized from ${topReplies.split('\n\n').length} replies):
-${replySummary}` : '(No replies provided)'}`;
+${replySummary ? `COMMUNITY RESPONSE (summarized from ${topReplies.split('\n\n').length} replies):
+${replySummary}` : '(No replies/comments provided)'}`;
 
     const result = await callClaude(
       apiKey,
@@ -137,7 +175,8 @@ ${replySummary}` : '(No replies provided)'}`;
       result,
       meta: {
         repliesProcessed: topReplies ? topReplies.split('\n\n').length : 0,
-        usedHaikuSummary: !!replySummary
+        usedHaikuSummary: !!replySummary,
+        profileUsed: !!profile?.name
       }
     });
   } catch (err) {

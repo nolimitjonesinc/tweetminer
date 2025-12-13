@@ -18,6 +18,360 @@ const MODES = {
   }
 };
 
+const DEFAULT_PROFILE = {
+  name: '',
+  role: '',
+  focus: '',
+  goals: '',
+  skills: '',
+  constraints: '',
+  style: 'direct',
+};
+
+const PROFILE_FIELDS = [
+  { key: 'name', label: 'What should we call you?', placeholder: 'e.g., Alex', type: 'input' },
+  { key: 'role', label: 'What do you do?', placeholder: 'e.g., Solo founder, developer, marketer, creator', type: 'input' },
+  { key: 'focus', label: 'What are you building or working on?', placeholder: 'e.g., SaaS tools for freelancers, mobile games, content business', type: 'textarea' },
+  { key: 'goals', label: 'What opportunities are you looking for?', placeholder: 'e.g., Product ideas, market gaps, partnership opportunities, content angles', type: 'textarea' },
+  { key: 'skills', label: 'What are you good at?', placeholder: 'e.g., Product design, coding, marketing, writing, sales', type: 'input' },
+  { key: 'constraints', label: 'What are your limitations?', placeholder: 'e.g., Limited time, small budget, no technical skills, solo operator', type: 'input' },
+];
+
+const STYLE_OPTIONS = [
+  { value: 'direct', label: 'Direct & concise' },
+  { value: 'detailed', label: 'Detailed & thorough' },
+  { value: 'casual', label: 'Casual & conversational' },
+];
+
+function ProfileSetup({ onSave, initialProfile }) {
+  const [profile, setProfile] = useState(initialProfile || DEFAULT_PROFILE);
+
+  const updateField = (key, value) => {
+    setProfile(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(profile);
+  };
+
+  const isValid = profile.name && profile.role && profile.goals;
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: '#ffffff',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      padding: '40px 20px',
+    }}>
+      <div style={{ maxWidth: '560px', margin: '0 auto' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#111', marginBottom: '8px' }}>
+          Set up your profile
+        </h1>
+        <p style={{ fontSize: '15px', color: '#666', marginBottom: '32px' }}>
+          This helps TweetMiner find opportunities tailored to you.
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          {PROFILE_FIELDS.map(field => (
+            <div key={field.key} style={{ marginBottom: '24px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: 600,
+                color: '#111',
+                marginBottom: '8px',
+              }}>
+                {field.label}
+                {['name', 'role', 'goals'].includes(field.key) && (
+                  <span style={{ color: '#ef4444', marginLeft: '4px' }}>*</span>
+                )}
+              </label>
+              {field.type === 'textarea' ? (
+                <textarea
+                  value={profile[field.key]}
+                  onChange={(e) => updateField(field.key, e.target.value)}
+                  placeholder={field.placeholder}
+                  style={{
+                    width: '100%',
+                    minHeight: '80px',
+                    background: '#fafafa',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '12px',
+                    color: '#111',
+                    padding: '14px 16px',
+                    fontSize: '15px',
+                    fontFamily: 'inherit',
+                    resize: 'vertical',
+                    boxSizing: 'border-box',
+                    outline: 'none',
+                    lineHeight: 1.5,
+                  }}
+                />
+              ) : (
+                <input
+                  type="text"
+                  value={profile[field.key]}
+                  onChange={(e) => updateField(field.key, e.target.value)}
+                  placeholder={field.placeholder}
+                  style={{
+                    width: '100%',
+                    background: '#fafafa',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '12px',
+                    color: '#111',
+                    padding: '14px 16px',
+                    fontSize: '15px',
+                    fontFamily: 'inherit',
+                    boxSizing: 'border-box',
+                    outline: 'none',
+                  }}
+                />
+              )}
+            </div>
+          ))}
+
+          <div style={{ marginBottom: '32px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: 600,
+              color: '#111',
+              marginBottom: '8px',
+            }}>
+              How do you want insights delivered?
+            </label>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {STYLE_OPTIONS.map(option => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => updateField('style', option.value)}
+                  style={{
+                    background: profile.style === option.value ? '#111' : '#fafafa',
+                    border: profile.style === option.value ? 'none' : '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    color: profile.style === option.value ? '#fff' : '#666',
+                    padding: '10px 16px',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={!isValid}
+            style={{
+              width: '100%',
+              background: isValid ? '#111' : '#e0e0e0',
+              border: 'none',
+              borderRadius: '12px',
+              color: isValid ? '#fff' : '#999',
+              padding: '16px',
+              fontSize: '16px',
+              fontWeight: 600,
+              cursor: isValid ? 'pointer' : 'not-allowed',
+              fontFamily: 'inherit',
+            }}
+          >
+            Save & Continue
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ProfileModal({ profile, onSave, onClose }) {
+  const [editedProfile, setEditedProfile] = useState(profile);
+
+  const updateField = (key, value) => {
+    setEditedProfile(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleSave = () => {
+    onSave(editedProfile);
+    onClose();
+  };
+
+  return (
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      background: 'rgba(0,0,0,0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px',
+      zIndex: 1000,
+    }}>
+      <div style={{
+        background: '#fff',
+        borderRadius: '16px',
+        width: '100%',
+        maxWidth: '560px',
+        maxHeight: '90vh',
+        overflow: 'auto',
+        padding: '24px',
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '24px',
+        }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#111', margin: 0 }}>
+            Edit Profile
+          </h2>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: '24px',
+              color: '#999',
+              cursor: 'pointer',
+              padding: '4px',
+            }}
+          >
+            &times;
+          </button>
+        </div>
+
+        {PROFILE_FIELDS.map(field => (
+          <div key={field.key} style={{ marginBottom: '20px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '13px',
+              fontWeight: 600,
+              color: '#111',
+              marginBottom: '6px',
+            }}>
+              {field.label}
+            </label>
+            {field.type === 'textarea' ? (
+              <textarea
+                value={editedProfile[field.key]}
+                onChange={(e) => updateField(field.key, e.target.value)}
+                placeholder={field.placeholder}
+                style={{
+                  width: '100%',
+                  minHeight: '70px',
+                  background: '#fafafa',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '10px',
+                  color: '#111',
+                  padding: '12px 14px',
+                  fontSize: '14px',
+                  fontFamily: 'inherit',
+                  resize: 'vertical',
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                }}
+              />
+            ) : (
+              <input
+                type="text"
+                value={editedProfile[field.key]}
+                onChange={(e) => updateField(field.key, e.target.value)}
+                placeholder={field.placeholder}
+                style={{
+                  width: '100%',
+                  background: '#fafafa',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '10px',
+                  color: '#111',
+                  padding: '12px 14px',
+                  fontSize: '14px',
+                  fontFamily: 'inherit',
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                }}
+              />
+            )}
+          </div>
+        ))}
+
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{
+            display: 'block',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: '#111',
+            marginBottom: '6px',
+          }}>
+            Insight style
+          </label>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {STYLE_OPTIONS.map(option => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => updateField('style', option.value)}
+                style={{
+                  background: editedProfile.style === option.value ? '#111' : '#fafafa',
+                  border: editedProfile.style === option.value ? 'none' : '1px solid #e0e0e0',
+                  borderRadius: '8px',
+                  color: editedProfile.style === option.value ? '#fff' : '#666',
+                  padding: '8px 14px',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1,
+              background: '#fafafa',
+              border: '1px solid #e0e0e0',
+              borderRadius: '10px',
+              color: '#666',
+              padding: '14px',
+              fontSize: '15px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            style={{
+              flex: 1,
+              background: '#111',
+              border: 'none',
+              borderRadius: '10px',
+              color: '#fff',
+              padding: '14px',
+              fontSize: '15px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function LoginScreen({ onLogin, error }) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -113,13 +467,14 @@ function LoginScreen({ onLogin, error }) {
   );
 }
 
-function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl }) {
+function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, profile, onEditProfile }) {
   const [tweetContent, setTweetContent] = useState(initialTweet || '');
   const [topReplies, setTopReplies] = useState(initialReplies || '');
   const [selectedMode, setSelectedMode] = useState(null);
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const analyze = async (mode) => {
     if (!tweetContent.trim()) return;
@@ -132,7 +487,7 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl }) {
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode, tweetContent, topReplies }),
+        body: JSON.stringify({ mode, tweetContent, topReplies, profile }),
       });
 
       const data = await response.json();
@@ -163,6 +518,14 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl }) {
       background: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     }}>
+      {showProfileModal && (
+        <ProfileModal
+          profile={profile}
+          onSave={onEditProfile}
+          onClose={() => setShowProfileModal(false)}
+        />
+      )}
+
       {/* Header */}
       <header style={{
         borderBottom: '1px solid #f0f0f0',
@@ -174,19 +537,36 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl }) {
         <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#111', margin: 0 }}>
           TweetMiner
         </h1>
-        <button
-          onClick={onLogout}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#666',
-            fontSize: '14px',
-            cursor: 'pointer',
-            padding: '8px',
-          }}
-        >
-          Logout
-        </button>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button
+            onClick={() => setShowProfileModal(true)}
+            style={{
+              background: '#fafafa',
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              color: '#666',
+              fontSize: '13px',
+              cursor: 'pointer',
+              padding: '8px 12px',
+              fontFamily: 'inherit',
+            }}
+          >
+            {profile.name || 'Profile'}
+          </button>
+          <button
+            onClick={onLogout}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#999',
+              fontSize: '13px',
+              cursor: 'pointer',
+              padding: '8px',
+            }}
+          >
+            Logout
+          </button>
+        </div>
       </header>
 
       <main style={{ maxWidth: '720px', margin: '0 auto', padding: '32px 24px' }}>
@@ -205,7 +585,7 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl }) {
           </div>
         )}
 
-        {/* Tweet Input */}
+        {/* Content Input */}
         <div style={{ marginBottom: '20px' }}>
           <label style={{
             display: 'block',
@@ -214,12 +594,12 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl }) {
             color: '#111',
             marginBottom: '8px',
           }}>
-            Tweet
+            Content
           </label>
           <textarea
             value={tweetContent}
             onChange={(e) => setTweetContent(e.target.value)}
-            placeholder="Paste tweet content here..."
+            placeholder="Paste tweet, post, or any content here..."
             style={{
               width: '100%',
               minHeight: '140px',
@@ -238,7 +618,7 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl }) {
           />
         </div>
 
-        {/* Replies Input */}
+        {/* Comments Input */}
         <div style={{ marginBottom: '32px' }}>
           <label style={{
             display: 'block',
@@ -247,12 +627,12 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl }) {
             color: '#111',
             marginBottom: '8px',
           }}>
-            Replies <span style={{ fontWeight: 400, color: '#999' }}>(optional)</span>
+            Comments / Replies <span style={{ fontWeight: 400, color: '#999' }}>(optional)</span>
           </label>
           <textarea
             value={topReplies}
             onChange={(e) => setTopReplies(e.target.value)}
-            placeholder="Paste interesting replies or thread..."
+            placeholder="Paste replies, comments, or thread..."
             style={{
               width: '100%',
               minHeight: '100px',
@@ -416,6 +796,8 @@ function App() {
   const [loginError, setLoginError] = useState('');
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [urlParams, setUrlParams] = useState({ tweet: '', replies: '', source: '' });
+  const [profile, setProfile] = useState(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   useEffect(() => {
     // Parse URL parameters (from extension)
@@ -430,6 +812,17 @@ function App() {
     if (params.has('tweet')) {
       window.history.replaceState({}, '', window.location.pathname);
     }
+
+    // Load profile from localStorage
+    const savedProfile = localStorage.getItem('tweetminer_profile');
+    if (savedProfile) {
+      try {
+        setProfile(JSON.parse(savedProfile));
+      } catch (e) {
+        setProfile(null);
+      }
+    }
+    setProfileLoaded(true);
 
     // Check if already authenticated
     const token = localStorage.getItem('tweetminer_auth');
@@ -485,7 +878,12 @@ function App() {
     setIsAuthenticated(false);
   };
 
-  if (checkingAuth) {
+  const handleSaveProfile = (newProfile) => {
+    setProfile(newProfile);
+    localStorage.setItem('tweetminer_profile', JSON.stringify(newProfile));
+  };
+
+  if (checkingAuth || !profileLoaded) {
     return (
       <div style={{
         minHeight: '100vh',
@@ -506,12 +904,19 @@ function App() {
     return <LoginScreen onLogin={handleLogin} error={loginError} />;
   }
 
+  // Show profile setup if no profile exists
+  if (!profile || !profile.name) {
+    return <ProfileSetup onSave={handleSaveProfile} initialProfile={profile} />;
+  }
+
   return (
     <TweetAnalyzer
       onLogout={handleLogout}
       initialTweet={urlParams.tweet}
       initialReplies={urlParams.replies}
       sourceUrl={urlParams.source}
+      profile={profile}
+      onEditProfile={handleSaveProfile}
     />
   );
 }
