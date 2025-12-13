@@ -702,6 +702,24 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, init
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Cmd/Ctrl + Enter to analyze with Exploit mode
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && tweetContent.trim() && !loading) {
+        e.preventDefault();
+        analyze('exploit');
+      }
+      // Escape to close modals
+      if (e.key === 'Escape') {
+        setShowProfileModal(false);
+        setShowHistoryModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [tweetContent, loading]);
+
   const analyze = async (mode) => {
     if (!tweetContent.trim()) return;
 
@@ -1144,7 +1162,29 @@ ${result}
           fontSize: '13px',
           color: '#999',
         }}>
-          Powered by Claude
+          <div style={{ marginBottom: '8px' }}>
+            <span style={{
+              background: '#f1f5f9',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontFamily: 'monospace',
+              fontSize: '11px',
+            }}>
+              {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+Enter
+            </span>
+            {' '}to analyze
+          </div>
+          <div>
+            <a
+              href="/bookmarklet.html"
+              target="_blank"
+              style={{ color: '#666', textDecoration: 'underline' }}
+            >
+              Get the bookmarklet
+            </a>
+            {' '}&middot;{' '}
+            Powered by Claude
+          </div>
         </footer>
       </main>
     </div>
