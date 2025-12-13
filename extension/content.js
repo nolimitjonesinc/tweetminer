@@ -20,9 +20,9 @@ function getTweetData() {
       mainTweet = extractTweetText(mainArticle);
       author = extractAuthor(mainArticle);
 
-      // Rest are replies
+      // Rest are replies (grab up to 50 - Haiku will summarize them cheaply)
       const replyTexts = [];
-      for (let i = 1; i < Math.min(articles.length, 6); i++) {
+      for (let i = 1; i < Math.min(articles.length, 51); i++) {
         const replyText = extractTweetText(articles[i]);
         const replyAuthor = extractAuthor(articles[i]);
         if (replyText) {
