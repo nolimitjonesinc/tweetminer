@@ -2,22 +2,19 @@ import { useState, useEffect } from 'react';
 
 const MODES = {
   exploit: {
-    label: 'EXPLOIT',
-    description: 'How can I capitalize on this?',
-    icon: '⚡',
-    color: '#00ff88',
+    label: 'Exploit',
+    description: 'Find opportunities',
+    color: '#10b981',
   },
   explain: {
-    label: 'EXPLAIN',
-    description: 'How does this actually work?',
-    icon: '🔍',
-    color: '#00d4ff',
+    label: 'Explain',
+    description: 'Break it down',
+    color: '#3b82f6',
   },
   productize: {
-    label: 'PRODUCTIZE',
-    description: 'How do I make money from this?',
-    icon: '💰',
-    color: '#ffaa00',
+    label: 'Productize',
+    description: 'Make money',
+    color: '#f59e0b',
   }
 };
 
@@ -35,42 +32,26 @@ function LoginScreen({ onLogin, error }) {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#0a0a0a',
+      background: '#ffffff',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       padding: '20px',
-      fontFamily: "'SF Mono', 'Consolas', 'Monaco', monospace",
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     }}>
-      <div style={{
-        width: '100%',
-        maxWidth: '400px',
-      }}>
+      <div style={{ width: '100%', maxWidth: '360px' }}>
         <h1 style={{
-          fontSize: '12px',
-          fontWeight: 400,
-          letterSpacing: '4px',
-          color: '#555',
+          fontSize: '32px',
+          fontWeight: 700,
+          color: '#111',
           marginBottom: '8px',
           textAlign: 'center',
         }}>
-          NOLIMITJONES.COM
+          TweetMiner
         </h1>
-        <h2 style={{
-          fontSize: '28px',
-          fontWeight: 700,
-          background: 'linear-gradient(90deg, #00ff88, #00d4ff, #ffaa00)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
-          textAlign: 'center',
-          marginBottom: '12px',
-        }}>
-          TWEETMINER
-        </h2>
         <p style={{
-          fontSize: '12px',
-          color: '#555',
+          fontSize: '15px',
+          color: '#666',
           textAlign: 'center',
           marginBottom: '32px',
         }}>
@@ -85,24 +66,25 @@ function LoginScreen({ onLogin, error }) {
             placeholder="Access code"
             style={{
               width: '100%',
-              background: '#111',
-              border: '1px solid #333',
-              color: '#e0e0e0',
+              background: '#fafafa',
+              border: '1px solid #e0e0e0',
+              borderRadius: '12px',
+              color: '#111',
               padding: '16px',
               fontSize: '16px',
               fontFamily: 'inherit',
-              textAlign: 'center',
-              letterSpacing: '4px',
-              marginBottom: '16px',
+              marginBottom: '12px',
+              outline: 'none',
+              boxSizing: 'border-box',
             }}
             autoFocus
           />
           {error && (
             <p style={{
-              color: '#ff4444',
-              fontSize: '12px',
+              color: '#ef4444',
+              fontSize: '14px',
               textAlign: 'center',
-              marginBottom: '16px',
+              marginBottom: '12px',
             }}>
               {error}
             </p>
@@ -112,19 +94,18 @@ function LoginScreen({ onLogin, error }) {
             disabled={loading || !password}
             style={{
               width: '100%',
-              background: '#00ff8820',
-              border: '2px solid #00ff88',
-              color: '#00ff88',
+              background: loading || !password ? '#e0e0e0' : '#111',
+              border: 'none',
+              borderRadius: '12px',
+              color: loading || !password ? '#999' : '#fff',
               padding: '16px',
-              fontSize: '14px',
-              fontWeight: 700,
-              letterSpacing: '2px',
+              fontSize: '16px',
+              fontWeight: 600,
               cursor: loading || !password ? 'not-allowed' : 'pointer',
-              opacity: loading || !password ? 0.5 : 1,
               fontFamily: 'inherit',
             }}
           >
-            {loading ? 'VERIFYING...' : 'ENTER'}
+            {loading ? 'Verifying...' : 'Continue'}
           </button>
         </form>
       </div>
@@ -132,9 +113,9 @@ function LoginScreen({ onLogin, error }) {
   );
 }
 
-function TweetAnalyzer({ onLogout }) {
-  const [tweetContent, setTweetContent] = useState('');
-  const [topReplies, setTopReplies] = useState('');
+function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl }) {
+  const [tweetContent, setTweetContent] = useState(initialTweet || '');
+  const [topReplies, setTopReplies] = useState(initialReplies || '');
   const [selectedMode, setSelectedMode] = useState(null);
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
@@ -150,23 +131,12 @@ function TweetAnalyzer({ onLogout }) {
     try {
       const response = await fetch('/api/analyze', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          mode,
-          tweetContent,
-          topReplies,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode, tweetContent, topReplies }),
       });
 
       const data = await response.json();
-      
-      if (data.error) {
-        setResult(`Error: ${data.error}`);
-      } else {
-        setResult(data.result);
-      }
+      setResult(data.error ? `Error: ${data.error}` : data.result);
     } catch (err) {
       setResult(`Error: ${err.message}`);
     }
@@ -190,119 +160,113 @@ function TweetAnalyzer({ onLogout }) {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#0a0a0a',
-      color: '#e0e0e0',
-      fontFamily: "'SF Mono', 'Consolas', 'Monaco', monospace",
-      padding: '20px',
-      boxSizing: 'border-box'
+      background: '#ffffff',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     }}>
-      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '40px',
-          borderBottom: '1px solid #222',
-          paddingBottom: '20px',
-          flexWrap: 'wrap',
-          gap: '12px'
-        }}>
-          <div>
-            <h1 style={{
-              margin: 0,
-              fontSize: '12px',
-              fontWeight: 400,
-              letterSpacing: '4px',
-              color: '#555'
-            }}>
-              NOLIMITJONES.COM
-            </h1>
-            <h2 style={{
-              margin: '8px 0 0 0',
-              fontSize: '24px',
-              fontWeight: 700,
-              background: 'linear-gradient(90deg, #00ff88, #00d4ff, #ffaa00)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
-            }}>
-              TWEETMINER
-            </h2>
-          </div>
-          <button
-            onClick={onLogout}
-            style={{
-              background: 'none',
-              border: '1px solid #333',
-              color: '#666',
-              padding: '8px 16px',
-              cursor: 'pointer',
-              fontSize: '11px',
-              letterSpacing: '2px',
-            }}
-          >
-            LOGOUT
-          </button>
-        </div>
+      {/* Header */}
+      <header style={{
+        borderBottom: '1px solid #f0f0f0',
+        padding: '16px 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      }}>
+        <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#111', margin: 0 }}>
+          TweetMiner
+        </h1>
+        <button
+          onClick={onLogout}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#666',
+            fontSize: '14px',
+            cursor: 'pointer',
+            padding: '8px',
+          }}
+        >
+          Logout
+        </button>
+      </header>
 
-        {/* Input Section */}
-        <div style={{ marginBottom: '24px' }}>
+      <main style={{ maxWidth: '720px', margin: '0 auto', padding: '32px 24px' }}>
+        {/* Source indicator */}
+        {sourceUrl && (
+          <div style={{
+            background: '#f0fdf4',
+            border: '1px solid #bbf7d0',
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '24px',
+            fontSize: '14px',
+            color: '#166534',
+          }}>
+            Imported from Twitter
+          </div>
+        )}
+
+        {/* Tweet Input */}
+        <div style={{ marginBottom: '20px' }}>
           <label style={{
             display: 'block',
-            fontSize: '10px',
-            letterSpacing: '2px',
-            color: '#666',
-            marginBottom: '8px'
+            fontSize: '14px',
+            fontWeight: 600,
+            color: '#111',
+            marginBottom: '8px',
           }}>
-            PASTE TWEET CONTENT
+            Tweet
           </label>
           <textarea
             value={tweetContent}
             onChange={(e) => setTweetContent(e.target.value)}
-            placeholder="Paste the tweet text here..."
+            placeholder="Paste tweet content here..."
             style={{
               width: '100%',
-              minHeight: '120px',
-              background: '#0a0a0a',
-              border: '1px solid #222',
-              color: '#e0e0e0',
+              minHeight: '140px',
+              background: '#fafafa',
+              border: '1px solid #e0e0e0',
+              borderRadius: '12px',
+              color: '#111',
               padding: '16px',
-              fontSize: '14px',
+              fontSize: '15px',
               fontFamily: 'inherit',
               resize: 'vertical',
               boxSizing: 'border-box',
-              lineHeight: 1.6
+              outline: 'none',
+              lineHeight: 1.6,
             }}
           />
         </div>
 
+        {/* Replies Input */}
         <div style={{ marginBottom: '32px' }}>
           <label style={{
             display: 'block',
-            fontSize: '10px',
-            letterSpacing: '2px',
-            color: '#666',
-            marginBottom: '8px'
+            fontSize: '14px',
+            fontWeight: 600,
+            color: '#111',
+            marginBottom: '8px',
           }}>
-            TOP REPLIES / THREAD <span style={{ color: '#444' }}>(OPTIONAL)</span>
+            Replies <span style={{ fontWeight: 400, color: '#999' }}>(optional)</span>
           </label>
           <textarea
             value={topReplies}
             onChange={(e) => setTopReplies(e.target.value)}
-            placeholder="Paste interesting replies or thread continuation..."
+            placeholder="Paste interesting replies or thread..."
             style={{
               width: '100%',
-              minHeight: '80px',
-              background: '#0a0a0a',
-              border: '1px solid #222',
-              color: '#e0e0e0',
+              minHeight: '100px',
+              background: '#fafafa',
+              border: '1px solid #e0e0e0',
+              borderRadius: '12px',
+              color: '#111',
               padding: '16px',
-              fontSize: '14px',
+              fontSize: '15px',
               fontFamily: 'inherit',
               resize: 'vertical',
               boxSizing: 'border-box',
-              lineHeight: 1.6
+              outline: 'none',
+              lineHeight: 1.6,
             }}
           />
         </div>
@@ -310,9 +274,9 @@ function TweetAnalyzer({ onLogout }) {
         {/* Mode Buttons */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+          gridTemplateColumns: 'repeat(3, 1fr)',
           gap: '12px',
-          marginBottom: '40px'
+          marginBottom: '32px',
         }}>
           {Object.entries(MODES).map(([key, mode]) => (
             <button
@@ -320,44 +284,23 @@ function TweetAnalyzer({ onLogout }) {
               onClick={() => analyze(key)}
               disabled={loading || !tweetContent.trim()}
               style={{
-                background: selectedMode === key ? mode.color + '15' : '#111',
-                border: `2px solid ${selectedMode === key ? mode.color : '#222'}`,
-                color: selectedMode === key ? mode.color : '#888',
+                background: selectedMode === key ? mode.color : '#fafafa',
+                border: selectedMode === key ? 'none' : '1px solid #e0e0e0',
+                borderRadius: '12px',
+                color: selectedMode === key ? '#fff' : '#111',
                 padding: '20px 16px',
                 cursor: loading || !tweetContent.trim() ? 'not-allowed' : 'pointer',
-                textAlign: 'center',
-                transition: 'all 0.2s',
                 opacity: loading || !tweetContent.trim() ? 0.5 : 1,
                 fontFamily: 'inherit',
-              }}
-              onMouseOver={(e) => {
-                if (!loading && tweetContent.trim()) {
-                  e.currentTarget.style.borderColor = mode.color;
-                  e.currentTarget.style.color = mode.color;
-                  e.currentTarget.style.background = mode.color + '10';
-                }
-              }}
-              onMouseOut={(e) => {
-                if (selectedMode !== key) {
-                  e.currentTarget.style.borderColor = '#222';
-                  e.currentTarget.style.color = '#888';
-                  e.currentTarget.style.background = '#111';
-                }
+                transition: 'all 0.15s ease',
               }}
             >
-              <div style={{ fontSize: '28px', marginBottom: '8px' }}>{mode.icon}</div>
-              <div style={{
-                fontSize: '12px',
-                fontWeight: 700,
-                letterSpacing: '2px',
-                marginBottom: '4px'
-              }}>
+              <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px' }}>
                 {mode.label}
               </div>
               <div style={{
-                fontSize: '10px',
-                color: '#555',
-                fontWeight: 400
+                fontSize: '13px',
+                color: selectedMode === key ? 'rgba(255,255,255,0.8)' : '#666',
               }}>
                 {mode.description}
               </div>
@@ -369,32 +312,29 @@ function TweetAnalyzer({ onLogout }) {
         {loading && (
           <div style={{
             textAlign: 'center',
-            padding: '60px 20px',
-            color: '#666'
+            padding: '48px 20px',
+            color: '#666',
           }}>
             <div style={{
               display: 'inline-block',
               width: '24px',
               height: '24px',
-              border: '2px solid #333',
-              borderTopColor: MODES[selectedMode]?.color || '#00ff88',
+              border: '2px solid #e0e0e0',
+              borderTopColor: MODES[selectedMode]?.color || '#111',
               borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
+              animation: 'spin 0.8s linear infinite',
             }} />
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-            <p style={{ marginTop: '16px', fontSize: '11px', letterSpacing: '2px' }}>
-              ANALYZING...
-            </p>
+            <p style={{ marginTop: '16px', fontSize: '14px' }}>Analyzing...</p>
           </div>
         )}
 
         {/* Results */}
         {result && !loading && (
           <div style={{
-            background: '#111',
-            border: `1px solid ${MODES[selectedMode]?.color || '#333'}`,
+            background: '#fafafa',
+            borderRadius: '12px',
             padding: '24px',
-            marginBottom: '20px'
           }}>
             <div style={{
               display: 'flex',
@@ -402,56 +342,53 @@ function TweetAnalyzer({ onLogout }) {
               alignItems: 'center',
               marginBottom: '20px',
               paddingBottom: '16px',
-              borderBottom: '1px solid #222',
-              flexWrap: 'wrap',
-              gap: '8px'
+              borderBottom: '1px solid #e0e0e0',
             }}>
               <span style={{
-                fontSize: '10px',
-                letterSpacing: '2px',
-                color: MODES[selectedMode]?.color || '#666'
+                fontSize: '14px',
+                fontWeight: 600,
+                color: MODES[selectedMode]?.color || '#111',
               }}>
-                {MODES[selectedMode]?.icon} {MODES[selectedMode]?.label} ANALYSIS
+                {MODES[selectedMode]?.label} Analysis
               </span>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button
                   onClick={clearAll}
                   style={{
-                    background: 'none',
-                    border: '1px solid #333',
+                    background: '#fff',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
                     color: '#666',
-                    padding: '6px 12px',
+                    padding: '8px 12px',
                     cursor: 'pointer',
-                    fontSize: '10px',
-                    letterSpacing: '1px',
+                    fontSize: '13px',
                     fontFamily: 'inherit',
                   }}
                 >
-                  CLEAR
+                  Clear
                 </button>
                 <button
                   onClick={copyResult}
                   style={{
-                    background: copied ? '#00ff8820' : 'none',
-                    border: `1px solid ${copied ? '#00ff88' : '#333'}`,
-                    color: copied ? '#00ff88' : '#666',
-                    padding: '6px 12px',
+                    background: copied ? '#10b981' : '#111',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    padding: '8px 12px',
                     cursor: 'pointer',
-                    fontSize: '10px',
-                    letterSpacing: '1px',
-                    transition: 'all 0.2s',
+                    fontSize: '13px',
                     fontFamily: 'inherit',
                   }}
                 >
-                  {copied ? '✓ COPIED' : 'COPY'}
+                  {copied ? 'Copied!' : 'Copy'}
                 </button>
               </div>
             </div>
             <div style={{
-              fontSize: '14px',
+              fontSize: '15px',
               lineHeight: 1.8,
-              color: '#ccc',
-              whiteSpace: 'pre-wrap'
+              color: '#333',
+              whiteSpace: 'pre-wrap',
             }}>
               {result}
             </div>
@@ -459,18 +396,17 @@ function TweetAnalyzer({ onLogout }) {
         )}
 
         {/* Footer */}
-        <div style={{
-          marginTop: '60px',
-          paddingTop: '20px',
-          borderTop: '1px solid #222',
+        <footer style={{
+          marginTop: '64px',
+          paddingTop: '24px',
+          borderTop: '1px solid #f0f0f0',
           textAlign: 'center',
-          fontSize: '10px',
-          color: '#333',
-          letterSpacing: '2px'
+          fontSize: '13px',
+          color: '#999',
         }}>
-          POWERED BY CLAUDE API
-        </div>
-      </div>
+          Powered by Claude
+        </footer>
+      </main>
     </div>
   );
 }
@@ -479,8 +415,22 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [urlParams, setUrlParams] = useState({ tweet: '', replies: '', source: '' });
 
   useEffect(() => {
+    // Parse URL parameters (from extension)
+    const params = new URLSearchParams(window.location.search);
+    setUrlParams({
+      tweet: params.get('tweet') || '',
+      replies: params.get('replies') || '',
+      source: params.get('source') || '',
+    });
+
+    // Clear URL params after reading (cleaner URL)
+    if (params.has('tweet')) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
     // Check if already authenticated
     const token = localStorage.getItem('tweetminer_auth');
     if (token) {
@@ -518,7 +468,7 @@ function App() {
         body: JSON.stringify({ password }),
       });
       const data = await response.json();
-      
+
       if (data.success) {
         localStorage.setItem('tweetminer_auth', data.token);
         setIsAuthenticated(true);
@@ -539,16 +489,15 @@ function App() {
     return (
       <div style={{
         minHeight: '100vh',
-        background: '#0a0a0a',
+        background: '#ffffff',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#666',
-        fontFamily: "'SF Mono', monospace",
-        fontSize: '12px',
-        letterSpacing: '2px',
+        color: '#999',
+        fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+        fontSize: '15px',
       }}>
-        LOADING...
+        Loading...
       </div>
     );
   }
@@ -557,7 +506,14 @@ function App() {
     return <LoginScreen onLogin={handleLogin} error={loginError} />;
   }
 
-  return <TweetAnalyzer onLogout={handleLogout} />;
+  return (
+    <TweetAnalyzer
+      onLogout={handleLogout}
+      initialTweet={urlParams.tweet}
+      initialReplies={urlParams.replies}
+      sourceUrl={urlParams.source}
+    />
+  );
 }
 
 export default App;

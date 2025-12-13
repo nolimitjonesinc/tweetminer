@@ -6,7 +6,9 @@
       "Bash(vercel --yes:*)",
       "Bash(vercel:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(convert:*)",
+      "Bash(ls:*)"
     ]
   }
 }
