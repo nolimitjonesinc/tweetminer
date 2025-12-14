@@ -106,6 +106,7 @@ Output a thorough summary:
 9. **Notable Quotes** (3-5 direct quotes) - Capture the most insightful, passionate, or representative voices verbatim.
 
 Be thorough. The next step is strategic analysis - give it rich material to work with.`;
+}
 
 async function callClaude(apiKey, model, system, userContent, maxTokens = 1500) {
   const response = await fetch('https://api.anthropic.com/v1/messages', {
