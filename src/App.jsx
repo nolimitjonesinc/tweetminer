@@ -300,6 +300,10 @@ function ProfileSetup({ onSave, initialProfile }) {
     onSave(profile);
   };
 
+  const handleSkip = () => {
+    onSave({ ...DEFAULT_PROFILE, name: 'You', role: 'Builder', goals: 'Ship fast' });
+  };
+
   const isValid = profile.name && profile.role && profile.goals;
 
   return (
@@ -426,6 +430,23 @@ function ProfileSetup({ onSave, initialProfile }) {
             }}
           >
             Save & Continue
+          </button>
+          <button
+            type="button"
+            onClick={handleSkip}
+            style={{
+              width: '100%',
+              background: 'none',
+              border: 'none',
+              color: '#999',
+              padding: '16px',
+              fontSize: '14px',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              marginTop: '8px',
+            }}
+          >
+            Skip for now
           </button>
         </form>
       </div>
