@@ -2,7 +2,7 @@
 // This gets minified and turned into a bookmarklet URL
 
 (function() {
-  const TWEETMINER_URL = 'https://tweetminer.nolimitjones.com';
+  const TWEETMINER_URL = 'https://nolimitjones.com/tweetminer';
 
   function detectPlatform() {
     const hostname = window.location.hostname;
