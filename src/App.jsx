@@ -1,4 +1,21 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Dashboard from './Dashboard';
+import ProjectSwitcher from './ProjectSwitcher';
+
+// ============================================
+// SHARED CONSTANTS
+// ============================================
+
+const AUTH_KEY = 'nolimitjones_auth';
+const PROFILE_KEY = 'nolimitjones_profile';
+
+// Dev mode: skip auth on localhost
+const IS_DEV = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+// ============================================
+// TWEETMINER SPECIFIC
+// ============================================
 
 const MODES = {
   exploit: {
@@ -76,6 +93,10 @@ function clearHistory() {
   localStorage.setItem('tweetminer_history', '[]');
   return [];
 }
+
+// ============================================
+// TWEETMINER COMPONENTS
+// ============================================
 
 function HistoryModal({ onClose, onSelect }) {
   const [history, setHistory] = useState(getHistory());
@@ -293,7 +314,7 @@ function ProfileSetup({ onSave, initialProfile }) {
           Set up your profile
         </h1>
         <p style={{ fontSize: '15px', color: '#666', marginBottom: '32px' }}>
-          This helps TweetMiner find opportunities tailored to you.
+          This helps personalize your experience across all tools.
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -625,7 +646,7 @@ function LoginScreen({ onLogin, error }) {
           marginBottom: '8px',
           textAlign: 'center',
         }}>
-          TweetMiner
+          nolimitjones
         </h1>
         <p style={{
           fontSize: '15px',
@@ -633,7 +654,7 @@ function LoginScreen({ onLogin, error }) {
           textAlign: 'center',
           marginBottom: '32px',
         }}>
-          Private tool. Enter your access code.
+          Private tools. Enter your access code.
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -844,9 +865,7 @@ ${result}
         justifyContent: 'space-between',
         alignItems: 'center',
       }}>
-        <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#111', margin: 0 }}>
-          TweetMiner
-        </h1>
+        <ProjectSwitcher />
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <button
             onClick={() => setShowHistoryModal(true)}
@@ -1191,13 +1210,12 @@ ${result}
   );
 }
 
-function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loginError, setLoginError] = useState('');
-  const [checkingAuth, setCheckingAuth] = useState(true);
+// ============================================
+// MAIN APP WITH ROUTING
+// ============================================
+
+function AppContent({ isAuthenticated, onLogin, onLogout, loginError, profile, onSaveProfile }) {
   const [urlParams, setUrlParams] = useState({ tweet: '', replies: '', source: '', platform: '' });
-  const [profile, setProfile] = useState(null);
-  const [profileLoaded, setProfileLoaded] = useState(false);
 
   useEffect(() => {
     // Parse URL parameters (from extension)
@@ -1213,9 +1231,53 @@ function App() {
     if (params.has('tweet')) {
       window.history.replaceState({}, '', window.location.pathname);
     }
+  }, []);
 
+  if (!isAuthenticated) {
+    return <LoginScreen onLogin={onLogin} error={loginError} />;
+  }
+
+  // Show profile setup if no profile exists
+  if (!profile || !profile.name) {
+    return <ProfileSetup onSave={onSaveProfile} initialProfile={profile} />;
+  }
+
+  return (
+    <Routes>
+      <Route
+        path="/"
+        element={<Dashboard onLogout={onLogout} userName={profile.name} />}
+      />
+      <Route
+        path="/tweetminer"
+        element={
+          <TweetAnalyzer
+            onLogout={onLogout}
+            initialTweet={urlParams.tweet}
+            initialReplies={urlParams.replies}
+            sourceUrl={urlParams.source}
+            initialPlatform={urlParams.platform}
+            profile={profile}
+            onEditProfile={onSaveProfile}
+          />
+        }
+      />
+      {/* Redirect unknown routes to dashboard */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [profile, setProfile] = useState(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+
+  useEffect(() => {
     // Load profile from localStorage
-    const savedProfile = localStorage.getItem('tweetminer_profile');
+    const savedProfile = localStorage.getItem(PROFILE_KEY);
     if (savedProfile) {
       try {
         setProfile(JSON.parse(savedProfile));
@@ -1225,12 +1287,39 @@ function App() {
     }
     setProfileLoaded(true);
 
+    // Dev mode: auto-authenticate on localhost
+    if (IS_DEV) {
+      setIsAuthenticated(true);
+      setCheckingAuth(false);
+      return;
+    }
+
     // Check if already authenticated
-    const token = localStorage.getItem('tweetminer_auth');
+    const token = localStorage.getItem(AUTH_KEY);
     if (token) {
       verifyToken(token);
     } else {
-      setCheckingAuth(false);
+      // Also check old key for migration
+      const oldToken = localStorage.getItem('tweetminer_auth');
+      if (oldToken) {
+        localStorage.setItem(AUTH_KEY, oldToken);
+        localStorage.removeItem('tweetminer_auth');
+        verifyToken(oldToken);
+      } else {
+        setCheckingAuth(false);
+      }
+    }
+
+    // Migrate old profile key
+    const oldProfile = localStorage.getItem('tweetminer_profile');
+    if (oldProfile && !savedProfile) {
+      localStorage.setItem(PROFILE_KEY, oldProfile);
+      localStorage.removeItem('tweetminer_profile');
+      try {
+        setProfile(JSON.parse(oldProfile));
+      } catch (e) {
+        // ignore
+      }
     }
   }, []);
 
@@ -1245,10 +1334,10 @@ function App() {
       if (data.valid) {
         setIsAuthenticated(true);
       } else {
-        localStorage.removeItem('tweetminer_auth');
+        localStorage.removeItem(AUTH_KEY);
       }
     } catch (err) {
-      localStorage.removeItem('tweetminer_auth');
+      localStorage.removeItem(AUTH_KEY);
     }
     setCheckingAuth(false);
   };
@@ -1264,7 +1353,7 @@ function App() {
       const data = await response.json();
 
       if (data.success) {
-        localStorage.setItem('tweetminer_auth', data.token);
+        localStorage.setItem(AUTH_KEY, data.token);
         setIsAuthenticated(true);
       } else {
         setLoginError('Invalid password');
@@ -1275,13 +1364,13 @@ function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('tweetminer_auth');
+    localStorage.removeItem(AUTH_KEY);
     setIsAuthenticated(false);
   };
 
   const handleSaveProfile = (newProfile) => {
     setProfile(newProfile);
-    localStorage.setItem('tweetminer_profile', JSON.stringify(newProfile));
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(newProfile));
   };
 
   if (checkingAuth || !profileLoaded) {
@@ -1301,25 +1390,17 @@ function App() {
     );
   }
 
-  if (!isAuthenticated) {
-    return <LoginScreen onLogin={handleLogin} error={loginError} />;
-  }
-
-  // Show profile setup if no profile exists
-  if (!profile || !profile.name) {
-    return <ProfileSetup onSave={handleSaveProfile} initialProfile={profile} />;
-  }
-
   return (
-    <TweetAnalyzer
-      onLogout={handleLogout}
-      initialTweet={urlParams.tweet}
-      initialReplies={urlParams.replies}
-      sourceUrl={urlParams.source}
-      initialPlatform={urlParams.platform}
-      profile={profile}
-      onEditProfile={handleSaveProfile}
-    />
+    <BrowserRouter>
+      <AppContent
+        isAuthenticated={isAuthenticated}
+        onLogin={handleLogin}
+        onLogout={handleLogout}
+        loginError={loginError}
+        profile={profile}
+        onSaveProfile={handleSaveProfile}
+      />
+    </BrowserRouter>
   );
 }
 
