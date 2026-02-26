@@ -163,7 +163,7 @@ export default async function handler(req, res) {
     if (topReplies && topReplies.trim()) {
       replySummary = await callClaude(
         apiKey,
-        'claude-3-5-haiku-20241022',
+        'claude-haiku-4-5-20251001',
         getSummarizePrompt(platform),
         `Here are the replies/comments to analyze:\n\n${topReplies}`,
         1200
