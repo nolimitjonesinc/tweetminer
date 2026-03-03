@@ -1,4 +1,5 @@
 // Generate dynamic prompts based on user profile
+// Models: Haiku 4.5 for summarization, Sonnet 4.5 for analysis
 function generatePrompts(profile) {
   const name = profile?.name || 'the user';
   const role = profile?.role || 'someone looking for opportunities';
