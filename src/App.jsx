@@ -741,6 +741,7 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, init
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [djLoopStatus, setDjLoopStatus] = useState(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
 
@@ -848,6 +849,31 @@ ${result}
     navigator.clipboard.writeText(markdown);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const sendToDJLoop = async () => {
+    if (djLoopStatus === 'sending') return;
+    setDjLoopStatus('sending');
+    try {
+      const title = (tweetContent || '').slice(0, 50).replace(/\n/g, ' ').trim() || 'TweetMiner Idea';
+      const response = await fetch('/api/send-to-loop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          raw_input: result,
+          source_url: window.location.href,
+          analysis: result,
+          platform,
+        }),
+      });
+      if (!response.ok) throw new Error('Failed');
+      setDjLoopStatus('sent');
+      setTimeout(() => setDjLoopStatus(null), 3000);
+    } catch {
+      setDjLoopStatus('error');
+      setTimeout(() => setDjLoopStatus(null), 3000);
+    }
   };
 
   const clearAll = () => {
@@ -1180,6 +1206,25 @@ ${result}
                 >
                   Export MD
                 </button>
+                {selectedMode === 'productize' && (
+                  <button
+                    onClick={sendToDJLoop}
+                    disabled={djLoopStatus === 'sending'}
+                    style={{
+                      background: djLoopStatus === 'sent' ? '#10b981' : djLoopStatus === 'error' ? '#ef4444' : '#f59e0b',
+                      border: 'none',
+                      borderRadius: '8px',
+                      color: '#fff',
+                      padding: '8px 12px',
+                      cursor: djLoopStatus === 'sending' ? 'wait' : 'pointer',
+                      fontSize: '13px',
+                      fontFamily: 'inherit',
+                      opacity: djLoopStatus === 'sending' ? 0.7 : 1,
+                    }}
+                  >
+                    {djLoopStatus === 'sending' ? 'Sending...' : djLoopStatus === 'sent' ? 'Sent!' : djLoopStatus === 'error' ? 'Failed' : 'Send to DJ Loop'}
+                  </button>
+                )}
               </div>
             </div>
             <div style={{
