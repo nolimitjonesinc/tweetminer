@@ -1,6 +1,6 @@
 # TweetMiner
 
-**Last updated:** August 4, 2026
+**Last updated:** November 7, 2026
 **Status:** Live ‹CHECK — README.md, ROADMAP.md and PROJECTS.md all say it's live at tweetminer.nolimitjones.com; nobody actually visited the URL to confirm the deploy is current›
 **Lives at:** tweetminer.nolimitjones.com ‹CHECK — taken from docs, not verified live›
 
@@ -57,7 +57,7 @@ If replies are included, there's a hidden pre-step: Haiku cheaply summarizes the
 
 ### Analysis
 - Three modes: **Exploit** (opportunities), **Explain** (how it works, non-coder friendly), **Productize** (monetization angles).
-- Two-stage AI pipeline: Haiku 4.5 summarizes replies/comments (if provided), Sonnet 4.5 performs the actual analysis, both using prompts dynamically built from the saved profile and platform context.
+- Two-stage AI pipeline: Haiku 5.5 summarizes replies/comments (if provided, thinking off), Sonnet 5.5 performs the actual analysis (thinking on, medium effort, 16k answer limit, auto-fallback model if a safety check declines), both using prompts dynamically built from the saved profile and platform context.
 - Keyboard shortcut: Cmd/Ctrl+Enter runs Exploit mode on the current content; Escape closes open modals.
 
 ### History & export
@@ -77,7 +77,7 @@ If replies are included, there's a hidden pre-step: Haiku cheaply summarizes the
   - `localStorage` keys: `nolimitjones_auth` (login token), `nolimitjones_profile` (profile JSON), `tweetminer_history` (array of up to 50 analyses).
   - The app auto-migrates from older key names (`tweetminer_auth`, `tweetminer_profile`) on load, so anyone with the pre-rename version won't lose data.
   - No database — everything is browser-local. Nothing is synced across devices.
-- **The key mechanism:** `api/analyze.js` builds three different system prompts per request from the user's profile (name, role, focus, goals, skills, constraints, style) plus platform context. If replies were pasted, Haiku 4.5 summarizes them first (cheap/fast); Sonnet 4.5 then runs the actual mode-specific analysis against the original content + that summary.
+- **The key mechanism:** `api/analyze.js` builds three different system prompts per request from the user's profile (name, role, focus, goals, skills, constraints, style) plus platform context. If replies were pasted, Haiku 5.5 summarizes them first (cheap/fast); Sonnet 5.5 then runs the actual mode-specific analysis against the original content + that summary.
 - **External services:**
   - Anthropic API — key name `ANTHROPIC_API_KEY`, used only inside `api/analyze.js`, never sent to the browser.
   - Password gate — key name `SITE_PASSWORD`, used in `api/login.js` and `api/verify.js`.

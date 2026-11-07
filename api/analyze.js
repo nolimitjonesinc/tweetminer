@@ -109,17 +109,26 @@ Output a thorough summary:
 Be thorough. The next step is strategic analysis - give it rich material to work with.`;
 }
 
-async function callClaude(apiKey, model, system, userContent, maxTokens = 1500) {
+async function callClaude(apiKey, model, system, userContent, maxTokens = 16000) {
+  const isSonnet5 = model.startsWith('claude-sonnet-5');
+  const headers = {
+    'Content-Type': 'application/json',
+    'x-api-key': apiKey,
+    'anthropic-version': '2023-06-01',
+  };
+  // Sonnet 5.5: if a safety check declines, retry automatically on a fallback model
+  if (isSonnet5) headers['anthropic-beta'] = 'server-side-fallback-2026-07-01';
+
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
+    headers,
     body: JSON.stringify({
       model,
       max_tokens: maxTokens,
+      // Haiku 5.5 thinks by default; keep the old no-thinking behavior for the cheap summary step
+      ...(model.startsWith('claude-haiku-5') ? { thinking: { type: 'disabled' } } : {}),
+      // Sonnet 5.5 thinks before answering; medium effort balances quality and speed
+      ...(isSonnet5 ? { output_config: { effort: 'medium' }, fallbacks: 'default' } : {}),
       system,
       messages: [{ role: 'user', content: userContent }],
     }),
@@ -131,7 +140,21 @@ async function callClaude(apiKey, model, system, userContent, maxTokens = 1500) 
     throw new Error(data.error.message);
   }
 
-  return data.content[0].text;
+  if (data.stop_reason === 'refusal') {
+    throw new Error('The AI declined to analyze this content.');
+  }
+
+  // Thinking models return thinking blocks first; collect only the answer text
+  const text = (data.content || [])
+    .filter((b) => b.type === 'text')
+    .map((b) => b.text)
+    .join('');
+
+  if (!text) {
+    throw new Error('The AI returned an empty answer. Try again.');
+  }
+
+  return text;
 }
 
 export default async function handler(req, res) {
@@ -164,14 +187,14 @@ export default async function handler(req, res) {
     if (topReplies && topReplies.trim()) {
       replySummary = await callClaude(
         apiKey,
-        'claude-haiku-4-5-20251001',
+        'claude-haiku-5-5',
         getSummarizePrompt(platform),
         `Here are the replies/comments to analyze:\n\n${topReplies}`,
         1200
       );
     }
 
-    // Stage 2: Main analysis with Sonnet (smart)
+    // Stage 2: Main analysis with Sonnet 5.5 (smart)
     const analysisInput = `CONTENT:
 ${tweetContent}
 
@@ -180,10 +203,10 @@ ${replySummary}` : '(No replies/comments provided)'}`;
 
     const result = await callClaude(
       apiKey,
-      'claude-sonnet-4-5-20250929',
+      'claude-sonnet-5-5',
       PROMPTS[mode],
       analysisInput,
-      2000
+      16000
     );
 
     return res.status(200).json({
