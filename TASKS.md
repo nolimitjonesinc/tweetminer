@@ -6,7 +6,7 @@ Read `PROJECT.md` before adding anything here. Tasks that break a "Rule of the
 house" don't belong on this list.
 
 ## Next up
-- [ ] **Paste the database key into Vercel** (`SUPABASE_SERVICE_ROLE_KEY`, from Supabase → Project Settings → API keys → service_role). Until then Mine Replies works but saves nothing.
+- [ ] **Paste the database key into Vercel** (`SUPABASE_SERVICE_ROLE_KEY`, from Supabase → Project Settings → API Keys → "Publishable and secret API keys" tab → Secret key. The new sb_secret_ key is preferred; legacy service_role keys are being retired by end of 2026, and both work). Until then Mine Replies works but saves nothing.
 - [ ] **First real Mine Replies test** once the AI key and database key are in: one busy X thread, check the Leads list fills with 4-5 scored replies only.
 - [ ] Add the login check to `/api/analyze` (currently open to anyone with the address).
 - [ ] **Replace the dead Anthropic API key in Vercel (found 2026-11-07).** The key stored in Vercel is rejected by Anthropic as invalid, so analysis fails until a fresh key is added. Then test one analysis and push the Sonnet 5.5 change live (must be live before Nov 30, 2026, when Sonnet 4.5 shuts off).

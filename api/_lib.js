@@ -21,7 +21,8 @@ export async function db(path, { method = 'GET', body, prefer } = {}) {
     method,
     headers: {
       apikey: key,
-      Authorization: `Bearer ${key}`,
+      // Old-style keys (JWTs, start with "eyJ") also go in Authorization; new sb_secret_ keys must not
+      ...(key.startsWith('eyJ') ? { Authorization: `Bearer ${key}` } : {}),
       'Content-Type': 'application/json',
       ...(prefer ? { Prefer: prefer } : {}),
     },
