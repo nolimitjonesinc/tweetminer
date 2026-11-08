@@ -1,4 +1,4 @@
-const TWEETMINER_URL = 'https://tweetminer.nolimitjones.com';
+const TWEETMINER_URL = 'https://tweetminer.nolimitjones.com/tweetminer';
 
 const PLATFORM_NAMES = {
   twitter: 'Twitter/X',

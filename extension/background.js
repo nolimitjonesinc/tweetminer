@@ -1,6 +1,6 @@
 // Background service worker
 
-const TWEETMINER_URL = 'https://nolimitjones.com/tweetminer';
+const TWEETMINER_URL = 'https://tweetminer.nolimitjones.com/tweetminer';
 
 let storedData = null;
 
