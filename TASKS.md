@@ -6,7 +6,7 @@ Read `PROJECT.md` before adding anything here. Tasks that break a "Rule of the
 house" don't belong on this list.
 
 ## Next up
-- [x] **Web address was stuck on a Dec 16, 2025 version — FIXED 2026-11-08** (pointed at newest deploy with DJ's OK). Still check Vercel → Domains so future pushes move it automatically. tweetminer.nolimitjones.com is pinned to an old deployment, so no push since then has reached it. Fix: point the address at the newest deployment (`vercel alias set <newest-deployment-url> tweetminer.nolimitjones.com`), then check Vercel's Domains settings so future pushes move it automatically. Undo: alias back to tweetminer-jz4tjdl5v.
+- [x] **Web address was stuck on a Dec 16, 2025 version — FIXED 2026-11-08** (pointed at newest deploy with DJ's OK). Root cause: the address was never attached to the project, only pinned by hand. Attached it to the project 2026-11-08 so pushes to master go live automatically. tweetminer.nolimitjones.com is pinned to an old deployment, so no push since then has reached it. Fix: point the address at the newest deployment (`vercel alias set <newest-deployment-url> tweetminer.nolimitjones.com`), then check Vercel's Domains settings so future pushes move it automatically. Undo: alias back to tweetminer-jz4tjdl5v.
 - [x] New Anthropic key works (tested 2026-11-07: analysis 18s, Mine Replies found 3 of 6 test replies, noise skipped). Database saving not yet confirmed live.
 - [x] **Paste the database key into Vercel** (done by DJ 2026-11-07) (`SUPABASE_SERVICE_ROLE_KEY`, from Supabase → Project Settings → API Keys → "Publishable and secret API keys" tab → Secret key. The new sb_secret_ key is preferred; legacy service_role keys are being retired by end of 2026, and both work). Until then Mine Replies works but saves nothing.
 - [x] **First real Mine Replies test** (passed live 2026-11-08: 2 leads saved, noise skipped, Leads list shows them; test rows deleted) once the AI key and database key are in: one busy X thread, check the Leads list fills with 4-5 scored replies only.
@@ -18,6 +18,7 @@ house" don't belong on this list.
 - [ ] …
 
 ## Done
+- [x] Fixed: right-clicking a tweet opened TweetMiner with empty boxes (page read the handoff too late). Verified live 2026-11-08.
 - [x] Moved main analysis to Sonnet 5.5 and summaries to Haiku 5.5; raised answer limit; answer-reading fixed for thinking models (2026-11-07, saved locally, not yet live or tested end-to-end)
 
 ## Someday / maybe
