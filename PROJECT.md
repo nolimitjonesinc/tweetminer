@@ -66,6 +66,14 @@ If replies are included, there's a hidden pre-step: Haiku cheaply summarizes the
 - Copy result as plain text, or export as markdown (includes date, platform, original content, replies, analysis).
 - "Send to DJ Loop" button (Productize mode only) — posts the result to an external tool via `/api/send-to-loop`. ‹CHECK — "DJ Loop" is not part of this repo; this only works if `DJ_LOOP_URL` and `DJ_LOOP_INGEST_KEY` are configured elsewhere and that service is reachable›
 
+### Mine Replies + Leads (added 2026-11-07)
+- 4th button **Mine Replies**: Sonnet 5.5 sorts every reply into compliment / frustration / better idea, scores each 1-5 for sellable value, and names the quick fix, which of DJ's existing apps fits (list in `api/_portfolio.js`), who pays, and a draft reply.
+- Only replies scoring 4-5 are saved, to the `tweetminer_leads` table in the shared Supabase project (ftcdqmrjjooluihysuyc). Locked: RLS on, no policies, only TweetMiner's server can read or write. Same reply on the same thread is never saved twice.
+- **Leads** button (header): list of saved leads with status (Found → I replied → They answered → Sold / Dead end), copy reply, open thread, delete.
+- Both server routes (`api/mine.js`, `api/leads.js`) check the login token.
+- Needs `SUPABASE_URL` (set) and `SUPABASE_SERVICE_ROLE_KEY` (not yet set — DJ pastes it) in Vercel. Without the key, mining still works but nothing is saved.
+- Bookmarklet now keeps each X reply's @handle (the extension already did).
+
 ### Multi-tool dashboard
 - A dashboard/landing page (`src/Dashboard.jsx`) with a project-switcher dropdown, styled as a portal for multiple personal tools.
 - Currently the project registry (`src/projects.js`) lists only TweetMiner itself — the "portal" shell exists but nothing else has been plugged into it yet.
@@ -102,6 +110,7 @@ No build-log entry exists for this project (checked `build-logs/logs/` — nothi
 
 ## 8. Known gaps / not built yet
 
+- **`/api/analyze` has no login check** (found 2026-11-07): anyone who finds the address can run analyses on DJ's AI bill. The new Mine/Leads routes do check.
 - **Auth is not real security.** The login token is `base64(timestamp-password)`, and `api/verify.js` just checks that the decoded string ends with `-${SITE_PASSWORD}`. The code itself says "in production, use JWT or similar" — this is a password *speed bump*, not a lock. Fine for a personal tool, worth knowing before treating it as sensitive-data-safe.
 - **"DJ Loop" is an undocumented external dependency.** `api/send-to-loop.js` posts to it, but nothing in this repo explains what DJ Loop is, where it lives, or what happens on the other end. ‹CHECK with Danny — is this still active?›
 - **The multi-tool "dashboard" only has one tool in it.** The portal/project-switcher UI is built for multiple apps, but `src/projects.js` currently registers just TweetMiner. Either more tools are meant to land here later, or this is leftover scaffolding.

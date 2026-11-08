@@ -32,8 +32,151 @@ const MODES = {
     label: 'Productize',
     description: 'Make money',
     color: '#f59e0b',
+  },
+  mine: {
+    label: 'Mine Replies',
+    description: 'Find buyers',
+    color: '#8b5cf6',
   }
 };
+
+const BUCKET_LABELS = { compliment: 'Compliment', frustration: 'Frustration', idea: 'Better idea' };
+const LEAD_STATUSES = [
+  ['found', 'Found'],
+  ['replied', 'I replied'],
+  ['answered', 'They answered'],
+  ['sold', 'Sold'],
+  ['dead', 'Dead end'],
+];
+
+function formatMinedLeads(data) {
+  const c = data.counts || {};
+  const lines = [];
+  lines.push(`${c.valuable || 0} valuable repl${c.valuable === 1 ? 'y' : 'ies'} out of ${c.replies || 0} sorted. ${c.skipped || 0} weren't worth saving.`);
+  if (data.dbNote) lines.push(data.dbNote);
+  else if (c.valuable) lines.push(`${c.saved || 0} new saved to your Leads list${c.saved < c.valuable ? ' (the rest were already there)' : ''}.`);
+  if (!data.leads?.length) {
+    lines.push('', 'Nothing here clears the bar. Try a thread with more replies, or one where people complain about something.');
+    return lines.join('\n');
+  }
+  data.leads.forEach((l, i) => {
+    lines.push('', `${i + 1}. ${l.handle} · ${BUCKET_LABELS[l.bucket] || l.bucket} · ${l.value_score}/5`);
+    lines.push(`   "${l.quote}"`);
+    lines.push(`   Sell: ${l.sellable_fix}`);
+    if (l.existing_app) lines.push(`   You already have: ${l.existing_app}`);
+    lines.push(`   Who pays: ${l.who_pays}`);
+    lines.push(`   Reply: ${l.draft_reply}`);
+  });
+  return lines.join('\n');
+}
+
+async function leadsApi(body) {
+  const token = localStorage.getItem('nolimitjones_auth');
+  const res = await fetch('/api/leads', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, ...body }),
+  });
+  return res.json();
+}
+
+function LeadsModal({ onClose }) {
+  const [leads, setLeads] = useState(null);
+  const [error, setError] = useState('');
+  const [note, setNote] = useState('');
+  const [filter, setFilter] = useState('open');
+  const [copiedId, setCopiedId] = useState(null);
+
+  useEffect(() => {
+    leadsApi({ action: 'list' })
+      .then((d) => {
+        if (d.error) setError(d.error);
+        setNote(d.dbNote || '');
+        setLeads(d.leads || []);
+      })
+      .catch((e) => { setError(e.message); setLeads([]); });
+  }, []);
+
+  const setStatus = async (id, status) => {
+    const before = leads;
+    setLeads(leads.map((l) => (l.id === id ? { ...l, status } : l)));
+    const d = await leadsApi({ action: 'update', id, status }).catch((e) => ({ error: e.message }));
+    if (d.error) { setLeads(before); setError(`Couldn't save: ${d.error}`); }
+  };
+
+  const remove = async (id) => {
+    const before = leads;
+    setLeads(leads.filter((l) => l.id !== id));
+    const d = await leadsApi({ action: 'delete', id }).catch((e) => ({ error: e.message }));
+    if (d.error) { setLeads(before); setError(`Couldn't delete: ${d.error}`); }
+  };
+
+  const copyReply = async (l) => {
+    try { await navigator.clipboard.writeText(l.draft_reply || ''); setCopiedId(l.id); setTimeout(() => setCopiedId(null), 1500); } catch {}
+  };
+
+  const shown = (leads || []).filter((l) =>
+    filter === 'all' ? true : filter === 'open' ? !['sold', 'dead'].includes(l.status) : l.status === filter
+  );
+
+  const chip = (active) => ({
+    background: active ? '#8b5cf6' : '#fafafa', color: active ? '#fff' : '#666',
+    border: active ? 'none' : '1px solid #e0e0e0', borderRadius: '999px',
+    padding: '6px 12px', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit',
+  });
+  const small = { background: '#fff', border: '1px solid #e0e0e0', borderRadius: '8px', color: '#666', padding: '6px 10px', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', zIndex: 1000 }}>
+      <div style={{ background: '#fff', borderRadius: '16px', width: '100%', maxWidth: '720px', maxHeight: '85vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid #f0f0f0' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#111', margin: 0 }}>Leads</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '24px', color: '#999', cursor: 'pointer', lineHeight: 1 }}>×</button>
+        </div>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', padding: '12px 24px', borderBottom: '1px solid #f0f0f0' }}>
+          {[['open', 'Open'], ...LEAD_STATUSES, ['all', 'All']].map(([k, label]) => (
+            <button key={k} onClick={() => setFilter(k)} style={chip(filter === k)}>{label}</button>
+          ))}
+        </div>
+        <div style={{ overflowY: 'auto', padding: '16px 24px', flex: 1 }}>
+          {error && <div style={{ color: '#ef4444', fontSize: '13px', marginBottom: '12px' }}>{error}</div>}
+          {note && <div style={{ color: '#666', fontSize: '13px', marginBottom: '12px' }}>{note}</div>}
+          {leads === null && <div style={{ color: '#666', fontSize: '14px' }}>Loading leads…</div>}
+          {leads !== null && shown.length === 0 && !error && (
+            <div style={{ color: '#666', fontSize: '14px', textAlign: 'center', padding: '32px 0' }}>
+              No leads here yet. Capture a thread with replies and hit Mine Replies.
+            </div>
+          )}
+          {shown.map((l) => (
+            <div key={l.id} style={{ border: '1px solid #f0f0f0', borderRadius: '12px', padding: '14px 16px', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '8px' }}>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#111' }}>
+                  {l.handle} <span style={{ fontWeight: 400, color: '#8b5cf6' }}>· {BUCKET_LABELS[l.bucket] || l.bucket} · {l.value_score}/5</span>
+                </div>
+                <select value={l.status} onChange={(e) => setStatus(l.id, e.target.value)} style={{ ...small, cursor: 'pointer' }}>
+                  {LEAD_STATUSES.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+                </select>
+              </div>
+              <div style={{ fontSize: '14px', color: '#333', fontStyle: 'italic', marginBottom: '8px' }}>"{l.quote}"</div>
+              <div style={{ fontSize: '13px', color: '#444', lineHeight: 1.5 }}>
+                <div><b>Sell:</b> {l.sellable_fix}</div>
+                {l.existing_app && <div><b>You already have:</b> {l.existing_app}</div>}
+                {l.who_pays && <div><b>Who pays:</b> {l.who_pays}</div>}
+                {l.draft_reply && <div style={{ marginTop: '6px', background: '#fafafa', borderRadius: '8px', padding: '8px 10px' }}><b>Reply:</b> {l.draft_reply}</div>}
+              </div>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
+                {l.draft_reply && <button onClick={() => copyReply(l)} style={small}>{copiedId === l.id ? 'Copied!' : 'Copy reply'}</button>}
+                {l.thread_url && <a href={l.thread_url} target="_blank" rel="noreferrer" style={{ ...small, textDecoration: 'none' }}>Open thread</a>}
+                <button onClick={() => remove(l.id)} style={{ ...small, color: '#ef4444' }}>Delete</button>
+                <span style={{ fontSize: '12px', color: '#999', alignSelf: 'center' }}>{new Date(l.created_at).toLocaleDateString()} · {l.platform}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const DEFAULT_PROFILE = {
   name: '',
@@ -744,6 +887,7 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, init
   const [djLoopStatus, setDjLoopStatus] = useState(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showLeadsModal, setShowLeadsModal] = useState(false);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -757,6 +901,7 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, init
       if (e.key === 'Escape') {
         setShowProfileModal(false);
         setShowHistoryModal(false);
+        setShowLeadsModal(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -771,14 +916,17 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, init
     setResult('');
 
     try {
-      const response = await fetch('/api/analyze', {
+      const isMine = mode === 'mine';
+      const response = await fetch(isMine ? '/api/mine' : '/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode, tweetContent, topReplies, profile, platform }),
+        body: JSON.stringify(isMine
+          ? { token: localStorage.getItem(AUTH_KEY), tweetContent, topReplies, profile, platform, sourceUrl }
+          : { mode, tweetContent, topReplies, profile, platform }),
       });
 
       const data = await response.json();
-      const analysisResult = data.error ? `Error: ${data.error}` : data.result;
+      const analysisResult = data.error ? `Error: ${data.error}` : isMine ? formatMinedLeads(data) : data.result;
       setResult(analysisResult);
 
       // Save to history on successful analysis
@@ -897,6 +1045,8 @@ ${result}
         />
       )}
 
+      {showLeadsModal && <LeadsModal onClose={() => setShowLeadsModal(false)} />}
+
       {showHistoryModal && (
         <HistoryModal
           onClose={() => setShowHistoryModal(false)}
@@ -914,6 +1064,21 @@ ${result}
       }}>
         <ProjectSwitcher />
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button
+            onClick={() => setShowLeadsModal(true)}
+            style={{
+              background: '#f5f3ff',
+              border: '1px solid #ddd6fe',
+              borderRadius: '8px',
+              color: '#7c3aed',
+              fontSize: '13px',
+              cursor: 'pointer',
+              padding: '8px 12px',
+              fontFamily: 'inherit',
+            }}
+          >
+            Leads
+          </button>
           <button
             onClick={() => setShowHistoryModal(true)}
             style={{
@@ -1083,7 +1248,7 @@ ${result}
         {/* Mode Buttons */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
           gap: '12px',
           marginBottom: '32px',
         }}>

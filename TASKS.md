@@ -6,6 +6,9 @@ Read `PROJECT.md` before adding anything here. Tasks that break a "Rule of the
 house" don't belong on this list.
 
 ## Next up
+- [ ] **Paste the database key into Vercel** (`SUPABASE_SERVICE_ROLE_KEY`, from Supabase → Project Settings → API keys → service_role). Until then Mine Replies works but saves nothing.
+- [ ] **First real Mine Replies test** once the AI key and database key are in: one busy X thread, check the Leads list fills with 4-5 scored replies only.
+- [ ] Add the login check to `/api/analyze` (currently open to anyone with the address).
 - [ ] **Replace the dead Anthropic API key in Vercel (found 2026-11-07).** The key stored in Vercel is rejected by Anthropic as invalid, so analysis fails until a fresh key is added. Then test one analysis and push the Sonnet 5.5 change live (must be live before Nov 30, 2026, when Sonnet 4.5 shuts off).
 - [ ] **Auto-scroll reply collector (sketch, awaiting DJ's OK, 2026-11-07).** Today the X capture only reads replies already loaded on screen, and X drops replies as you scroll past them. Plan: on click, the extension scrolls the thread itself, saves each reply as it shows up (no duplicates), and stops at 50 replies, the end of the thread, or ~15 seconds. It shows a live "Collecting replies… 23" counter, then jumps back to the top and opens the analyzer. Open question: the reply cap (50 recommended, since the cheap model already summarizes them). Done = on a busy tweet it captures far more than a no-scroll grab does.
 
@@ -16,6 +19,8 @@ house" don't belong on this list.
 - [x] Moved main analysis to Sonnet 5.5 and summaries to Haiku 5.5; raised answer limit; answer-reading fixed for thinking models (2026-11-07, saved locally, not yet live or tested end-to-end)
 
 ## Someday / maybe
+- **Three-bucket reply mining — BUILT 2026-11-07 (see PROJECT.md 'Mine Replies + Leads'; untested with real AI until the key is fixed).** DJ: replies come in three kinds (compliments, frustrations, better ideas), and all three should be mined for things to build fast and sell. Today the reply summary already notes pains and ideas, but nothing turns them into sellable fixes. Plan: sort every reply into Praise (proof people want it), Frustrations (gaps to fill), Better ideas (upgrades). For each bucket's top items, output: the quick thing to build (or which existing DJ app already fixes it), who'd pay, and a reply to send that person. Merges with Find Buyers below. Done = one real thread produces at least 3 sellable fixes with names attached. **Tracking (DJ, 2026-11-07):** every item must keep the person's handle, their exact words, its group, the thread link, and a status (found → replied → they answered → sold). Gaps found: the X extension keeps handles but the bookmarklet drops them, and the summary step strips names before the main analysis. Leads need a real database (recommend the shared Supabase project), not the browser's 50-item history.
+- **Find Buyers mode (DJ: "Love the idea!", 2026-11-07).** A 4th button that names repliers whose complaint one of DJ's finished apps or a dannyjones.ai custom build fixes, with a draft reply each. Run the no-code test first: 10 real threads by hand, send the 10 best replies. Kill it if fewer than 3 threads match or zero replies get a response. Full card: idea-digger skill folder, rig/runs/2026-11-07-tweetminer-find-buyers.md
 Ideas that aren't committed. Parking them here keeps them out of "Next up."
 From `ROADMAP.md`'s "Future Considerations" (never started, just brainstormed):
 - Team features — share analyses with others, shared profiles/templates

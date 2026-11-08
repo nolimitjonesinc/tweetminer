@@ -40,8 +40,14 @@
         const replyTexts = [];
         for (let i = 1; i < Math.min(articles.length, 51); i++) {
           const replyText = articles[i].querySelector('[data-testid="tweetText"]');
+          // Keep the replier's handle so leads stay tied to a real person
+          let handle = '';
+          for (const link of articles[i].querySelectorAll('a[href^="/"]')) {
+            const href = link.getAttribute('href');
+            if (href && /^\/[a-zA-Z0-9_]+$/.test(href)) { handle = href.slice(1); break; }
+          }
           if (replyText) {
-            replyTexts.push(replyText.innerText.trim());
+            replyTexts.push((handle ? `@${handle}: ` : '') + replyText.innerText.trim());
           }
         }
         replies = replyTexts.join('\n\n');

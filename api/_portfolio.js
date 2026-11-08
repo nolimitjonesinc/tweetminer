@@ -1,0 +1,27 @@
+// DJ's existing apps the Mine Replies step can match a reply against.
+// Edit freely: one line per app. Source: ../PROJECTS.md (2026-11-07).
+export const PORTFOLIO = [
+  'Loomiverse (loomiverse.ai) — AI writes a personalized choose-your-own-adventure story with deep characters',
+  'iSpyCritters (ispycritters.com) — live map of real-time wildlife sightings in parks',
+  'Road-Lore (roadlore.ai) — true, AI-narrated stories about wherever you are on a road trip, from GPS + real sources',
+  'Our List (ourlist.dannyjones.ai) — synced grocery list app with recipes from what is in your kitchen',
+  'Flippy Flap (flippyflap.com) — airport departures-board flip animations, exported as video',
+  'Quiply — Chrome extension: AI reply, fact-check, summarize and rewrite on X, Reddit and anywhere',
+  'Silly Goose Tales — personalized kids bedtime stories emailed on a schedule',
+  'Embers — voice conversations that turn an elderly person\'s life stories into a family book',
+  'Crew Stories — film/TV crew record and share on-set stories',
+  'Tagaroo — film/TV crews photograph and tag cast, crew and wardrobe on set',
+  'Tech Scout Pro — fast storyboard notes for 1st ADs on location scouts',
+  'AD Scheduler Pro — shooting schedules, call sheets, storyboards, background-actor paperwork',
+  'TextDJ — turn any text into a short AI song in a chosen style',
+  'crimescene.fun — AI detective roasts your photo',
+  'NixIt — remember your Liked/Rejected decision on products and links when you see them again',
+  'YT Insights — paste a YouTube link, get the transcript summarized through 6 lenses, then chat with it',
+  'WriteYouASong.com — interview about someone you love, Claude writes personalized song lyrics',
+  'Brand Brief — paste a website, get the brand kit: colours, fonts, voice',
+  'Career Chief — AI chief of staff for applying to one specific job',
+  'Family Morning Brief — daily brief for parents from family calendars, with conflicts flagged',
+  'App Mockup Tool — drag a phone frame over anything on screen and capture a framed screenshot',
+  'Guardian — automatic undo checkpoints for AI coding sessions',
+  'dannyjones.ai custom builds — DJ builds custom software for a client\'s specific problem or broken workflow',
+];

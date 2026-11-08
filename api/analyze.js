@@ -1,5 +1,7 @@
+import { callClaude } from './_lib.js';
+
 // Generate dynamic prompts based on user profile
-// Models: Haiku 4.5 for summarization, Sonnet 4.5 for analysis
+// Models: Haiku 5.5 for summarization, Sonnet 5.5 for analysis
 function generatePrompts(profile) {
   const name = profile?.name || 'the user';
   const role = profile?.role || 'someone looking for opportunities';
@@ -107,54 +109,6 @@ Output a thorough summary:
 9. **Notable Quotes** (3-5 direct quotes) - Capture the most insightful, passionate, or representative voices verbatim.
 
 Be thorough. The next step is strategic analysis - give it rich material to work with.`;
-}
-
-async function callClaude(apiKey, model, system, userContent, maxTokens = 16000) {
-  const isSonnet5 = model.startsWith('claude-sonnet-5');
-  const headers = {
-    'Content-Type': 'application/json',
-    'x-api-key': apiKey,
-    'anthropic-version': '2023-06-01',
-  };
-  // Sonnet 5.5: if a safety check declines, retry automatically on a fallback model
-  if (isSonnet5) headers['anthropic-beta'] = 'server-side-fallback-2026-07-01';
-
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      model,
-      max_tokens: maxTokens,
-      // Haiku 5.5 thinks by default; keep the old no-thinking behavior for the cheap summary step
-      ...(model.startsWith('claude-haiku-5') ? { thinking: { type: 'disabled' } } : {}),
-      // Sonnet 5.5 thinks before answering; medium effort balances quality and speed
-      ...(isSonnet5 ? { output_config: { effort: 'medium' }, fallbacks: 'default' } : {}),
-      system,
-      messages: [{ role: 'user', content: userContent }],
-    }),
-  });
-
-  const data = await response.json();
-
-  if (data.error) {
-    throw new Error(data.error.message);
-  }
-
-  if (data.stop_reason === 'refusal') {
-    throw new Error('The AI declined to analyze this content.');
-  }
-
-  // Thinking models return thinking blocks first; collect only the answer text
-  const text = (data.content || [])
-    .filter((b) => b.type === 'text')
-    .map((b) => b.text)
-    .join('');
-
-  if (!text) {
-    throw new Error('The AI returned an empty answer. Try again.');
-  }
-
-  return text;
 }
 
 export default async function handler(req, res) {
