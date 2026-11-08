@@ -144,7 +144,7 @@ export default async function handler(req, res) {
         'claude-haiku-5-5',
         getSummarizePrompt(platform),
         `Here are the replies/comments to analyze:\n\n${topReplies}`,
-        1200
+        6000
       );
     }
 
