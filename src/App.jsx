@@ -1446,19 +1446,21 @@ ${result}
 // ============================================
 
 function AppContent({ isAuthenticated, onLogin, onLogout, loginError, profile, onSaveProfile }) {
-  const [urlParams, setUrlParams] = useState({ tweet: '', replies: '', source: '', platform: '' });
-
-  useEffect(() => {
-    // Parse URL parameters (from extension)
+  // Read what the extension/bookmarklet handed over BEFORE the first render,
+  // so the analyzer starts with it filled in (reading it later left the boxes empty)
+  const [urlParams] = useState(() => {
     const params = new URLSearchParams(window.location.search);
-    setUrlParams({
+    return {
       tweet: params.get('tweet') || '',
       replies: params.get('replies') || '',
       source: params.get('source') || '',
       platform: params.get('platform') || '',
-    });
+    };
+  });
 
+  useEffect(() => {
     // Clear URL params after reading (cleaner URL)
+    const params = new URLSearchParams(window.location.search);
     if (params.has('tweet')) {
       window.history.replaceState({}, '', window.location.pathname);
     }
