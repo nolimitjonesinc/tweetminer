@@ -1,4 +1,7 @@
-import { callClaude } from './_lib.js';
+import { callClaude, isAuthed } from './_lib.js';
+
+// Longest post + replies accepted, so one request can't run up a huge AI bill.
+const MAX_CHARS = 60000;
 
 // Generate dynamic prompts based on user profile
 // Models: Haiku 5.5 for summarization, Sonnet 5.5 for analysis
@@ -116,7 +119,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { mode, tweetContent, topReplies, profile, platform } = req.body;
+  const { token, mode, tweetContent, topReplies, profile, platform } = req.body || {};
+  if (!isAuthed(token)) {
+    return res.status(401).json({ error: 'Please log in again.' });
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (!apiKey) {
@@ -132,6 +139,10 @@ export default async function handler(req, res) {
 
   if (!tweetContent || !tweetContent.trim()) {
     return res.status(400).json({ error: 'Content required' });
+  }
+
+  if (String(tweetContent).length + (topReplies ? String(topReplies).length : 0) > MAX_CHARS) {
+    return res.status(400).json({ error: `That's too long. Keep the post and replies under ${MAX_CHARS.toLocaleString()} characters.` });
   }
 
   try {

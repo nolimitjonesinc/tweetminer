@@ -1,13 +1,39 @@
+import crypto from 'node:crypto';
 // Shared server helpers. Files starting with _ are not API routes on Vercel.
 
-export function isAuthed(token) {
-  const pw = process.env.SITE_PASSWORD;
-  if (!token || !pw) return false;
-  try {
-    return Buffer.from(token, 'base64').toString('utf-8').endsWith(`-${pw}`);
-  } catch {
-    return false;
-  }
+// Sign-in tokens.
+// The old token was base64("<time>-<password>"): anyone holding it could decode it and
+// read the site password. Now the token is "<issuedAt>.<signature>". It proves the holder
+// knew SITE_PASSWORD without containing it, and it expires after 30 days.
+// No new setting is needed: the signature is keyed on SITE_PASSWORD itself, so changing
+// the password in Vercel also signs everyone out.
+const TOKEN_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+function signToken(issuedAt, password) {
+  return crypto.createHmac('sha256', password).update(`tweetminer:${issuedAt}`).digest('hex');
+}
+
+function safeEqual(a, b) {
+  const ab = Buffer.from(String(a));
+  const bb = Buffer.from(String(b));
+  return ab.length === bb.length && crypto.timingSafeEqual(ab, bb);
+}
+
+export function passwordMatches(given, password = process.env.SITE_PASSWORD) {
+  return typeof given === 'string' && !!password && safeEqual(given, password);
+}
+
+export function makeToken(password = process.env.SITE_PASSWORD, now = Date.now()) {
+  return `${now}.${signToken(now, password)}`;
+}
+
+export function isAuthed(token, password = process.env.SITE_PASSWORD, now = Date.now()) {
+  if (!token || !password || typeof token !== 'string') return false;
+  const [issuedRaw, signature] = token.split('.');
+  const issuedAt = Number(issuedRaw);
+  if (!Number.isFinite(issuedAt) || !signature) return false;
+  if (now - issuedAt > TOKEN_MAX_AGE_MS || issuedAt - now > 60 * 1000) return false;
+  return safeEqual(signature, signToken(issuedAt, password));
 }
 
 export function supabaseConfigured() {

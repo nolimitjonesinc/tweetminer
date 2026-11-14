@@ -41,7 +41,7 @@ If replies are included, there's a hidden pre-step: Haiku cheaply summarizes the
 ## 5. Feature list — what exists today
 
 ### Access
-- Password gate (`SITE_PASSWORD` env var) with a token stored in `localStorage`, checked on every load via a `/api/verify` call.
+- Password gate (`SITE_PASSWORD` env var) with a token stored in `localStorage`, checked on every load via a `/api/verify` call. The token is `<issuedAt>.<signature>` (signed with `SITE_PASSWORD`, expires after 30 days, never contains the password). Every AI route (`/api/analyze`, `/api/mine`, `/api/leads`, `/api/send-to-loop`) refuses requests without a valid token.
 - Auto-login on `localhost` for local dev (`IS_DEV` check bypasses the password screen entirely).
 
 ### Profile

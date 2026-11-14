@@ -1,6 +1,12 @@
+import { isAuthed } from './_lib.js'
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  if (!isAuthed(req.body?.token)) {
+    return res.status(401).json({ error: 'Please log in again.' })
   }
 
   const loopUrl = process.env.DJ_LOOP_URL
