@@ -1,5 +1,5 @@
 # TweetMiner — Status
-_Auto-updated by Status Brain on every push. Last change: Added Status Brain workflow to auto-generate this file on every commit._
+_Auto-updated by Status Brain on every push. Last change: Locked the analysis endpoint behind sign-in; tokens no longer contain the password._
 
 **Status:** In progress  
 **What it is:** A web app that analyzes tweets and mines data from them.  
@@ -8,6 +8,9 @@ _Auto-updated by Status Brain on every push. Last change: Added Status Brain wor
 ## What works right now
 - Basic app structure with React frontend (App.jsx, main.jsx)
 - Three API endpoints: login, verify, and analyze
+- Authentication middleware (_auth.js) protecting endpoints
+- Sign-in requirement for the analysis endpoint (recently hardened)
+- Tokens no longer expose passwords (security fix applied)
 - HTML template and CSS styling
 - Vite build configuration
 - Vercel deployment config
@@ -15,6 +18,8 @@ _Auto-updated by Status Brain on every push. Last change: Added Status Brain wor
 - Task tracking structure (CLAUDE.md and tasks/ folder for roadmap)
 
 ## Recent changes (newest first)
+- 2026-11-14 — Locked the analysis endpoint behind sign-in; tokens no longer contain the password
+- 2026-07-20 — Hardened Status Brain with retry-with-rebase on push
 - 2026-07-20 — Added Status Brain workflow to auto-generate STATUS.md on every push
 - 2026-07-20 — Added Status Brain script (status-brain.mjs)
 - 2026-01-29 — Set up HQ task tracking with CLAUDE.md and tasks folder (core features roadmap)
@@ -26,7 +31,8 @@ _Auto-updated by Status Brain on every push. Last change: Added Status Brain wor
 
 ## Not done / next
 - Core tweet analysis features not yet implemented (analyze.js is a stub)
-- Login/verify flow incomplete (endpoints exist but no backend logic visible)
-- No database or auth system in place
+- Login/verify flow incomplete (endpoints exist but full backend logic unclear)
+- No database connected or visible
+- Password security still in progress (tokens hardened but broader auth system status unclear)
 - Task tracking exists (tasks/01-core-features.md) but features not yet built
-- Package dependencies not clearly defined (package.json details not visible)
+- Package dependencies not clearly visible in available data
