@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { loadHistory, addToHistory, saveHistory, excerpt, timeAgo, toMarkdown } from './history.js';
 
 const MODES = {
   exploit: {
@@ -131,6 +132,44 @@ function TweetAnalyzer({ onLogout }) {
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedMd, setCopiedMd] = useState(false);
+  const [history, setHistory] = useState(() => loadHistory(typeof localStorage !== 'undefined' ? localStorage : null));
+  const wasLoading = useRef(false);
+
+  // When an analysis finishes without an error, keep it in this device's history.
+  useEffect(() => {
+    if (wasLoading.current && !loading && result && selectedMode && !result.startsWith('Error:')) {
+      setHistory((list) => {
+        const next = addToHistory(list, { mode: selectedMode, tweetContent, topReplies, result });
+        saveHistory(localStorage, next);
+        return next;
+      });
+    }
+    wasLoading.current = loading;
+  }, [loading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const openPast = (entry) => {
+    setTweetContent(entry.tweetContent);
+    setTopReplies(entry.topReplies || '');
+    setSelectedMode(entry.mode);
+    setResult(entry.result);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const clearHistory = () => {
+    setHistory([]);
+    saveHistory(localStorage, []);
+  };
+
+  const copyMarkdown = () => {
+    navigator.clipboard.writeText(toMarkdown({
+      label: MODES[selectedMode]?.label || 'TWEETMINER',
+      tweetContent,
+      result,
+    }));
+    setCopiedMd(true);
+    setTimeout(() => setCopiedMd(false), 2000);
+  };
 
   const analyze = async (mode) => {
     if (!tweetContent.trim()) return;
@@ -405,7 +444,7 @@ function TweetAnalyzer({ onLogout }) {
               }}>
                 {MODES[selectedMode]?.icon} {MODES[selectedMode]?.label} ANALYSIS
               </span>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <button
                   onClick={clearAll}
                   style={{
@@ -437,6 +476,23 @@ function TweetAnalyzer({ onLogout }) {
                 >
                   {copied ? '✓ COPIED' : 'COPY'}
                 </button>
+                <button
+                  onClick={copyMarkdown}
+                  aria-label="Copy as markdown, with the tweet quoted on top"
+                  style={{
+                    background: copiedMd ? '#00d4ff20' : 'none',
+                    border: `1px solid ${copiedMd ? '#00d4ff' : '#333'}`,
+                    color: copiedMd ? '#00d4ff' : '#666',
+                    padding: '6px 12px',
+                    cursor: 'pointer',
+                    fontSize: '10px',
+                    letterSpacing: '1px',
+                    transition: 'all 0.2s',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {copiedMd ? '✓ COPIED' : 'COPY MD'}
+                </button>
               </div>
             </div>
             <div style={{
@@ -446,6 +502,73 @@ function TweetAnalyzer({ onLogout }) {
               whiteSpace: 'pre-wrap'
             }}>
               {result}
+            </div>
+          </div>
+        )}
+
+        {/* History: past analyses on this device */}
+        {history.length > 0 && (
+          <div style={{ marginTop: '40px' }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '12px'
+            }}>
+              <span style={{ fontSize: '10px', letterSpacing: '2px', color: '#666' }}>
+                RECENT ({history.length})
+              </span>
+              <button
+                onClick={clearHistory}
+                style={{
+                  background: 'none',
+                  border: '1px solid #333',
+                  color: '#555',
+                  padding: '4px 10px',
+                  cursor: 'pointer',
+                  fontSize: '10px',
+                  letterSpacing: '1px',
+                  fontFamily: 'inherit',
+                }}
+              >
+                CLEAR HISTORY
+              </button>
+            </div>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              {history.map((entry) => (
+                <li key={entry.id} style={{ marginBottom: '8px' }}>
+                  <button
+                    onClick={() => openPast(entry)}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      background: '#111',
+                      border: '1px solid #222',
+                      borderLeft: `3px solid ${MODES[entry.mode]?.color || '#333'}`,
+                      color: '#aaa',
+                      padding: '12px 14px',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      fontSize: '13px',
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    <span style={{
+                      display: 'block',
+                      fontSize: '10px',
+                      letterSpacing: '1px',
+                      color: MODES[entry.mode]?.color || '#666',
+                      marginBottom: '4px'
+                    }}>
+                      {MODES[entry.mode]?.icon} {MODES[entry.mode]?.label || entry.mode} · {timeAgo(entry.at)}
+                    </span>
+                    {excerpt(entry.tweetContent)}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <div style={{ fontSize: '10px', color: '#444', marginTop: '6px' }}>
+              Saved on this device only. Last 20 kept.
             </div>
           </div>
         )}
