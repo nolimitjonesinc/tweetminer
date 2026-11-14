@@ -1,3 +1,10 @@
+import { tokenFromRequest, tokenIsValid } from './_auth.js';
+
+// Longest tweet/thread text accepted, to keep each call's cost bounded.
+const MAX_CHARS = 12000;
+// Model can be changed in Vercel env vars without a code change.
+const MODEL = process.env.TWEETMINER_MODEL || 'claude-sonnet-4-20250514';
+
 const PROMPTS = {
   exploit: `You are an opportunity analyst for DJ, an award-winning game designer who creates ADHD-friendly iPhone games and runs mockingbirdnews.org (satirical news).
 
@@ -40,7 +47,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { mode, tweetContent, topReplies } = req.body;
+  if (!tokenIsValid(tokenFromRequest(req), process.env.SITE_PASSWORD)) {
+    return res.status(401).json({ error: 'Please sign in again.' });
+  }
+
+  const { mode, tweetContent, topReplies } = req.body || {};
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (!apiKey) {
@@ -53,6 +64,10 @@ export default async function handler(req, res) {
 
   if (!tweetContent || !tweetContent.trim()) {
     return res.status(400).json({ error: 'Tweet content required' });
+  }
+
+  if (tweetContent.length + (topReplies ? String(topReplies).length : 0) > MAX_CHARS) {
+    return res.status(400).json({ error: `That is too long. Keep the tweet and replies under ${MAX_CHARS} characters.` });
   }
 
   const fullContent = `TWEET CONTENT:
@@ -70,7 +85,7 @@ ${topReplies}` : ''}`;
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: MODEL,
         max_tokens: 2000,
         system: PROMPTS[mode],
         messages: [{ role: 'user', content: fullContent }],
@@ -83,7 +98,11 @@ ${topReplies}` : ''}`;
       return res.status(500).json({ error: data.error.message });
     }
 
-    return res.status(200).json({ result: data.content[0].text });
+    const textBlock = Array.isArray(data.content) ? data.content.find((b) => b.type === 'text') : null;
+    if (!textBlock) {
+      return res.status(502).json({ error: 'The AI returned no text. Try again.' });
+    }
+    return res.status(200).json({ result: textBlock.text });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
