@@ -144,6 +144,7 @@ function TweetAnalyzer({ onLogout }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('tweetminer_auth') || ''}`,
         },
         body: JSON.stringify({
           mode,
@@ -152,8 +153,15 @@ function TweetAnalyzer({ onLogout }) {
         }),
       });
 
+      if (response.status === 401) {
+        // Sign-in expired (or an old-style token): back to the password screen.
+        setLoading(false);
+        onLogout();
+        return;
+      }
+
       const data = await response.json();
-      
+
       if (data.error) {
         setResult(`Error: ${data.error}`);
       } else {
