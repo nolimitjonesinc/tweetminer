@@ -922,8 +922,15 @@ function TweetAnalyzer({ onLogout, initialTweet, initialReplies, sourceUrl, init
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(isMine
           ? { token: localStorage.getItem(AUTH_KEY), tweetContent, topReplies, profile, platform, sourceUrl }
-          : { mode, tweetContent, topReplies, profile, platform }),
+          : { token: localStorage.getItem(AUTH_KEY), mode, tweetContent, topReplies, profile, platform }),
       });
+
+      if (response.status === 401) {
+        // Sign-in expired, or an old-style token from before the security fix: back to the password screen.
+        setLoading(false);
+        onLogout();
+        return;
+      }
 
       const data = await response.json();
       const analysisResult = data.error ? `Error: ${data.error}` : isMine ? formatMinedLeads(data) : data.result;
@@ -1008,6 +1015,7 @@ ${result}
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          token: localStorage.getItem(AUTH_KEY),
           title,
           raw_input: result,
           source_url: window.location.href,

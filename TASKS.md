@@ -10,7 +10,8 @@ house" don't belong on this list.
 - [x] New Anthropic key works (tested 2026-11-07: analysis 18s, Mine Replies found 3 of 6 test replies, noise skipped). Database saving not yet confirmed live.
 - [x] **Paste the database key into Vercel** (done by DJ 2026-11-07) (`SUPABASE_SERVICE_ROLE_KEY`, from Supabase → Project Settings → API Keys → "Publishable and secret API keys" tab → Secret key. The new sb_secret_ key is preferred; legacy service_role keys are being retired by end of 2026, and both work). Until then Mine Replies works but saves nothing.
 - [x] **First real Mine Replies test** (passed live 2026-11-08: 2 leads saved, noise skipped, Leads list shows them; test rows deleted) once the AI key and database key are in: one busy X thread, check the Leads list fills with 4-5 scored replies only.
-- [ ] Add the login check to `/api/analyze` (currently open to anyone with the address).
+- [x] Add the login check to `/api/analyze` (currently open to anyone with the address). Built 2026-11-14 on branch claude/finisher-master-auth (draft PR, waiting on DJ's merge): `/api/analyze` and `/api/send-to-loop` now refuse anyone not signed in, 60,000-character cap per analysis.
+- [ ] After that PR is live: change `SITE_PASSWORD` in Vercel (the old tokens contained it) and sign in again.
 - [x] **Replace the dead Anthropic API key in Vercel (found 2026-11-07, done by DJ).** The key stored in Vercel is rejected by Anthropic as invalid, so analysis fails until a fresh key is added. Then test one analysis and push the Sonnet 5.5 change live (must be live before Nov 30, 2026, when Sonnet 4.5 shuts off).
 - [ ] **Auto-scroll reply collector (sketch, awaiting DJ's OK, 2026-11-07).** Today the X capture only reads replies already loaded on screen, and X drops replies as you scroll past them. Plan: on click, the extension scrolls the thread itself, saves each reply as it shows up (no duplicates), and stops at 50 replies, the end of the thread, or ~15 seconds. It shows a live "Collecting replies… 23" counter, then jumps back to the top and opens the analyzer. Open question: the reply cap (50 recommended, since the cheap model already summarizes them). Done = on a busy tweet it captures far more than a no-scroll grab does.
 
@@ -33,7 +34,7 @@ From `ROADMAP.md`'s "Future Considerations" (never started, just brainstormed):
 - Custom analysis modes, batch analysis, RSS/webhook integrations
 
 Gaps found while documenting this project (see `PROJECT.md` section 8) — worth a decision, not started:
-- Replace the base64 login token with something that can't be trivially decoded
+- ~~Replace the base64 login token with something that can't be trivially decoded~~ Done in the same PR (2026-11-14): signed 30-day token, no password inside, no new setting needed.
 - Confirm whether the "DJ Loop" integration is still active; document what it is if so
 - Decide whether the multi-tool dashboard/project-switcher is getting more tools, or should be simplified back to a single-app view
 - Clean up the stray "OpenClaw use case..." text file sitting in the project root
